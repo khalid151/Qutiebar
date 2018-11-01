@@ -809,6 +809,7 @@ namespace Utils
 
             panelList.push_back(std::make_unique<Widgets::Panel>(screen, width, height, margins, padding));
             auto panel = panelList.back().get();
+            bool over = config->value("over-windows", true).toBool();
             bool bottom = config->value("bottom", false).toBool();
             if(bottom) panel->move(screen.x(), screen.y() + screen.height() - panel->height());
             else panel->move(screen.x(), screen.y());
@@ -818,9 +819,11 @@ namespace Utils
             xcb_ewmh_connection_t *ewmh;
             ewmh = new xcb_ewmh_connection_t;
             xcb_ewmh_init_atoms_replies(ewmh, xcb_ewmh_init_atoms(conn, ewmh), nullptr);
-            // TODO: add option to set the panel above or below windows
-            xcb_atom_t states[2] = {ewmh->_NET_WM_STATE_STICKY, ewmh->_NET_WM_STATE_BELOW};
-            xcb_atom_t type[1] = {ewmh->_NET_WM_WINDOW_TYPE_DOCK};
+
+            xcb_atom_t states[2] = {ewmh->_NET_WM_STATE_STICKY};
+            if(over) states[1] = ewmh->_NET_WM_STATE_ABOVE;
+            else states[1] = ewmh->_NET_WM_STATE_BELOW;
+            xcb_atom_t type[] = {ewmh->_NET_WM_WINDOW_TYPE_DOCK};
             xcb_ewmh_set_wm_state(ewmh, panel->winId(), 2, states);
             xcb_ewmh_set_wm_window_type(ewmh, panel->winId(), 1, type);
             xcb_ewmh_wm_strut_partial_t strut;
