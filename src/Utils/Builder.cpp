@@ -367,11 +367,14 @@ namespace Utils
             }
             else if(type == "clock")
             {
-                // TODO: time-zone maybe?
                 auto update = config->value("update-rate", 1).toFloat();
                 auto format = config->value("format", "hh:mm a").toString();
                 auto clock = std::make_unique<Modules::Clock>(padding, format, update * 1000);
                 clock->setAltFormat(config->value("alt-format", format).toString());
+
+                if(config->contains("time-zone"))
+                    clock->setTimeZone(config->value("time-zone").toString());
+
                 setProperties(clock.get());
 
                 widgets.insert(std::make_pair(name, clock.get()));

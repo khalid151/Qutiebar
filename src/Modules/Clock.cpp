@@ -1,5 +1,6 @@
-#include <QTimer>
+#include <cstdio>
 #include <QDateTime>
+#include <QTimer>
 
 #include "Modules/Clock.h"
 
@@ -29,6 +30,17 @@ namespace Modules
         altFormat = format;
     }
 
+    void
+    Clock::setTimeZone(const QString &zone)
+    {
+        tz = QTimeZone(zone.toLatin1());
+        if(!tz.isValid())
+        {
+            fprintf(stderr, "%s is an invalid time-zone format.\n", zone.toLatin1().data());
+            exit(1);
+        }
+    }
+
     // Private
     void
     Clock::switchFormat()
@@ -40,6 +52,9 @@ namespace Modules
     Clock::updateClock()
     {
         QDateTime dateTime = QDateTime::currentDateTime();
-        setText(dateTime.toString(format));
+        if(tz.isValid())
+            setText(dateTime.toTimeZone(tz).toString(format));
+        else
+            setText(dateTime.toString(format));
     }
 }

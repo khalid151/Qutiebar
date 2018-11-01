@@ -2,6 +2,7 @@
 #define CLOCKWID_H
 
 #include <QHBoxLayout>
+#include <QTimeZone>
 
 #include "Widgets/Text.h"
 
@@ -14,8 +15,10 @@ namespace Modules
 
             void updateFormat(const QString&);
             void setAltFormat(const QString&);
+            void setTimeZone(const QString&);
 
         private:
+            QTimeZone tz;
             QString format, altFormat;
             QHBoxLayout layoutContainer;
 
