@@ -7,6 +7,13 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_BUILD_TYPE Debug)
 
+set(MAJOR 0)
+set(MINOR 1)
+set(PATCH 0)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/Version.h.in
+            ${CMAKE_CURRENT_SOURCE_DIR}/include/Version.h)
+
 find_package(ECM REQUIRED NO_MODULE)
 list(APPEND CMAKE_MODULE_PATH ${ECM_MODULE_PATH}
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
@@ -61,4 +68,5 @@ endif(${Qt5DBus_FOUND})
 add_executable(${PROJECT_NAME} ${sources} ${headers} ${res})
 target_link_libraries(${PROJECT_NAME} ${Libs})
 
-# TODO: install target
+install(TARGETS ${PROJECT_NAME}
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)

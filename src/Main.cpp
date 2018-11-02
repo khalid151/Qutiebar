@@ -1,3 +1,5 @@
+#include "Version.h"
+
 #include <cstdio>
 #include <QApplication>
 #include <QCommandLineParser>
@@ -26,12 +28,18 @@ int main(int argc, char **argv)
     parser.addHelpOption();
     parser.addOptions({
             {QStringList{"c", "config"}, "Load a configuration file.", "config-file"},
+            {QStringList{"v", "version"}, "Display version number and exit."},
             });
     parser.process(app);
 
     if(parser.isSet("config")) configPath = parser.value("config");
     else configPath = Utils::Builder::defaultConfigPath();
 
+    if(parser.isSet("v"))
+    {
+        printf("Qutiebar version: %s\n", VERSION);
+        return 0;
+    }
 
 #ifdef ENABLE_DBUS
     // D-Bus -- register serivce before building widgets, there might be scripts needing that
