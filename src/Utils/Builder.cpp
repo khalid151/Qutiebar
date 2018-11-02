@@ -249,7 +249,7 @@ namespace Utils
         displayItem->setData(data);
 
         setProperties(displayItem.get());
-        configureProgress(displayItem->progress);
+        configureProgress(displayItem->progress());
 
         if(config->contains("icon-color"))
             displayItem->enableIconColorChange(false);
@@ -269,36 +269,36 @@ namespace Utils
             if(config->contains("foreground"))
             {
                 auto color = getConfiguredColor("foreground");
-                displayItem->progress->setFontColor(color);
+                displayItem->progress()->setFontColor(color);
             }
             if(config->contains("font-size"))
-                displayItem->progress->setFontSize(config->value("font-size").toInt());
+                displayItem->progress()->setFontSize(config->value("font-size").toInt());
         }
 
-        if(config->contains("font-size") && displayItem->percentage != nullptr)
-            displayItem->percentage->setFontSize(config->value("font-size").toInt());
-        if(config->contains("icon-size") && displayItem->icon != nullptr)
-            displayItem->icon->resize(config->value("icon-size").toInt());
+        if(config->contains("font-size") && displayItem->percentage() != nullptr)
+            displayItem->percentage()->setFontSize(config->value("font-size").toInt());
+        if(config->contains("icon-size") && displayItem->icon() != nullptr)
+            displayItem->icon()->resize(config->value("icon-size").toInt());
 
-        if(config->contains("percentage-color") && displayItem->percentage != nullptr)
+        if(config->contains("percentage-color") && displayItem->percentage() != nullptr)
         {
             auto color = getConfiguredColor("percentage-color");
-            displayItem->percentage->setForeground(color);
+            displayItem->percentage()->setForeground(color);
         }
-        if(config->contains("icon-color") && displayItem->icon != nullptr)
+        if(config->contains("icon-color") && displayItem->icon() != nullptr)
         {
             auto color = getConfiguredColor("icon-color");
-            displayItem->icon->setForeground(color);
+            displayItem->icon()->setForeground(color);
         }
-        if(config->contains("percentage-background") && displayItem->percentage != nullptr)
+        if(config->contains("percentage-background") && displayItem->percentage() != nullptr)
         {
             auto color = getConfiguredColor("percentage-background");
-            displayItem->percentage->setBackground(color);
+            displayItem->percentage()->setBackground(color);
         }
-        if(config->contains("icon-background") && displayItem->icon != nullptr)
+        if(config->contains("icon-background") && displayItem->icon() != nullptr)
         {
             auto color = getConfiguredColor("icon-background");
-            displayItem->icon->setBackground(color);
+            displayItem->icon()->setBackground(color);
         }
 
         return displayItem;

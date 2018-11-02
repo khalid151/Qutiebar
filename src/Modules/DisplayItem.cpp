@@ -22,65 +22,58 @@ namespace Modules
         switch(display)
         {
             case Type::TEXT:
-                percentage = new Widgets::Text("", padding);
-                percentage->setStyleSheet("background: none; border: none");
-                layoutContainer.addWidget(percentage);
+                _percentage = std::make_unique<Widgets::Text>("", padding, this);
+                _percentage->setStyleSheet("background: none; border: none");
+                layoutContainer.addWidget(_percentage.get());
                 break;
             case Type::FONTICON:
-                icon = new Widgets::Icon("", 10, padding, this);
+                _icon = std::make_unique<Widgets::Icon>("", 10, padding, this);
                 break;
             case Type::PIXICON:
-                icon = new Widgets::Icon("", h, w, padding, this);
+                _icon = std::make_unique<Widgets::Icon>("", h, w, padding, this);
                 break;
             case Type::CIRCLE:
-                progress = new Widgets::Progress(w, false, 0, this);
-                layoutContainer.addWidget(progress);
+                _progress = std::make_unique<Widgets::Progress>(w, false, 0, this);
+                layoutContainer.addWidget(_progress.get());
                 break;
             case Type::TEXTCIRCLE:
-                progress = new Widgets::Progress(w, true, 0, this);
-                layoutContainer.addWidget(progress);
+                _progress = std::make_unique<Widgets::Progress>(w, true, 0, this);
+                layoutContainer.addWidget(_progress.get());
                 break;
         }
 
         // Text location relative to icon
         if(location != TextLocation::NONE)
         {
-            percentage = new Widgets::Text("", padding);
-            percentage->setStyleSheet("background: none; border: none");
+            _percentage = std::make_unique<Widgets::Text>("", padding, this);
+            _percentage->setStyleSheet("background: none; border: none");
             switch(location)
             {
                 case TextLocation::LEFT:
-                    layoutContainer.addWidget(percentage);
-                    layoutContainer.addWidget(icon);
+                    layoutContainer.addWidget(_percentage.get());
+                    layoutContainer.addWidget(_icon.get());
                     break;
                 case TextLocation::RIGHT:
-                    layoutContainer.addWidget(icon);
-                    layoutContainer.addWidget(percentage);
+                    layoutContainer.addWidget(_icon.get());
+                    layoutContainer.addWidget(_percentage.get());
                     break;
                 case TextLocation::NONE:
                     break;
             }
-        } else if(icon != nullptr)
+        } else if(_icon != nullptr)
         {
-            layoutContainer.addWidget(icon);
+            layoutContainer.addWidget(_icon.get());
         }
 
         primaryColor = secondaryColor = Qt::black;
 
-        if(progress != nullptr)
-            progress->setStyle(4, Qt::white, Qt::black, Qt::white, 2);
+        if(_progress != nullptr)
+            _progress->setStyle(4, Qt::white, Qt::black, Qt::white, 2);
 
         auto *timer = new QTimer(this);
         connect(timer, &QTimer::timeout, this, &DisplayItem::updateItem);
         timer->start(updateRate);
         updateItem();
-    }
-
-    DisplayItem::~DisplayItem()
-    {
-        delete percentage;
-        delete icon;
-        delete event;
     }
 
     void
@@ -132,48 +125,48 @@ namespace Modules
         {
             case Type::CIRCLE:
             case Type::TEXTCIRCLE:
-                progress->updateProgress(getPercentage());
-                progress->update();
+                _progress->updateProgress(getPercentage());
+                _progress->update();
                 if(modelHasState)
                 {
-                    if(M->getState()) progress->setColor(primaryColor);
-                    else progress->setColor(secondaryColor);
+                    if(M->getState()) _progress->setColor(primaryColor);
+                    else _progress->setColor(secondaryColor);
                 }
                 break;
             case Type::TEXT:
-                percentage->setText(QString("%1%").arg(QString::number(getPercentage())));
+                _percentage->setText(QString("%1%").arg(QString::number(getPercentage())));
                 if(modelHasState)
                 {
-                    if(M->getState()) percentage->setForeground(primaryColor);
-                    else percentage->setForeground(secondaryColor);
+                    if(M->getState()) _percentage->setForeground(primaryColor);
+                    else _percentage->setForeground(secondaryColor);
                 }
                 break;
             case Type::FONTICON:
             case Type::PIXICON:
-                if(percentage !=nullptr)
-                    percentage->setText(QString("%1%").arg(QString::number(getPercentage())));
+                if(_percentage !=nullptr)
+                    _percentage->setText(QString("%1%").arg(QString::number(getPercentage())));
                 if(modelHasState)
                 {
                     if(!primaryIcons.isEmpty() && !secondaryIcons.isEmpty())
                     {
                         if(M->getState())
-                            icon->load(getCurrentIcon(primaryIcons));
+                            _icon->load(getCurrentIcon(primaryIcons));
                         else if(!M->getState())
-                            icon->load(getCurrentIcon(secondaryIcons));
+                            _icon->load(getCurrentIcon(secondaryIcons));
                         else if(M->getState() == 2)
-                            icon->load(primaryIcons.at(primaryIcons.count() - 1)); // Mostly for battery, last icon would represent full.
+                            _icon->load(primaryIcons.at(primaryIcons.count() - 1)); // Mostly for battery, last icon would represent full.
 
                         if(!staticIconColor)
                         {
-                            if(M->getState()) icon->setForeground(primaryColor);
-                            else icon->setForeground(secondaryColor);
+                            if(M->getState()) _icon->setForeground(primaryColor);
+                            else _icon->setForeground(secondaryColor);
                         }
                     }
                 }
                 else
                 {
                     if(!primaryIcons.isEmpty())
-                        icon->load(getCurrentIcon(primaryIcons));
+                        _icon->load(getCurrentIcon(primaryIcons));
                 }
                 break;
         }

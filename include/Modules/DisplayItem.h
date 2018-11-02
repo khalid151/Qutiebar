@@ -1,6 +1,8 @@
 #ifndef DISPLAYITEM_H
 #define DISPLAYITEM_H
 
+#include <memory>
+
 #include "Widgets/Icon.h"
 #include "Widgets/Progress.h"
 #include "Widgets/Text.h"
@@ -19,7 +21,6 @@ namespace Modules
             DisplayItem(Type = Type::TEXT, TextLocation = TextLocation::NONE,
                     int w = 20, int h = 20, int padding = 0,
                     int updateRate = 1000, QWidget* parent = nullptr);
-            ~DisplayItem();
 
             void setIcons(const QStringList&);
             void setIcons(const QStringList&, const QStringList&);
@@ -28,9 +29,9 @@ namespace Modules
             void enableIconColorChange(bool = true);
             void setData(Utils::DataModel*);
 
-            Widgets::Text *percentage = nullptr;
-            Widgets::Icon *icon = nullptr;
-            Widgets::Progress *progress = nullptr;
+            Widgets::Text *percentage() { return _percentage.get(); }
+            Widgets::Icon *icon() { return _icon.get(); }
+            Widgets::Progress *progress() { return _progress.get(); }
             Utils::EventHandler *event;
 
         private:
@@ -41,6 +42,9 @@ namespace Modules
             QStringList primaryIcons, secondaryIcons;
             QColor primaryColor, secondaryColor;
             QHBoxLayout layoutContainer;
+            std::unique_ptr<Widgets::Text> _percentage;
+            std::unique_ptr<Widgets::Icon> _icon;
+            std::unique_ptr<Widgets::Progress> _progress;
             Utils::DataModel *M = nullptr;
 
             void updateItem();
