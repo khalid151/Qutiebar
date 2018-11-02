@@ -6,7 +6,7 @@
 
 namespace Widgets
 {
-    PixIcon::PixIcon(int h, int w, const QString &location, QWidget *parent)
+    PixIcon::PixIcon(int w, int h, const QString &location, QWidget *parent)
         : QWidget(parent)
     {
         height = h;
@@ -54,7 +54,7 @@ namespace Widgets
     }
 
     void
-    PixIcon::resize(int h, int w)
+    PixIcon::resize(int w, int h)
     {
         height = h;
         width = w;
