@@ -794,15 +794,25 @@ namespace Utils
             auto name = QString(p).replace("panel/", "");
             config->beginGroup(p);
 
-            // TODO: add multi-monitor support
-            QRect screen = QGuiApplication::screens()[0]->geometry();
+            QRect screen;
+            if(config->contains("monitor"))
+            {
+                for(auto s:QGuiApplication::screens())
+                    if(s->name() == config->value("monitor").toString())
+                        screen = s->geometry();
+                // Fallback if not found
+                if(!screen.width() && !screen.height())
+                    screen = QGuiApplication::screens()[0]->geometry();
+            }
+            else
+                screen = QGuiApplication::screens()[0]->geometry();
 
             int width, height, padding, margins;
             auto w = config->value("width", "100%").toString();
             auto h = config->value("height", "4%").toString();
-            if(w.endsWith('%')) width = static_cast<int>(w.replace('%', "").toFloat()/100 * screen.width());
+            if(w.contains('%')) width = static_cast<int>(w.replace('%', "").toFloat()/100 * screen.width());
             else width = w.toInt();
-            if(h.endsWith('%')) height = static_cast<int>(h.replace('%', "").toFloat()/100 * screen.height());
+            if(h.contains('%')) height = static_cast<int>(h.replace('%', "").toFloat()/100 * screen.height());
             else height = h.toInt();
             padding = config->value("padding", 0).toInt();
             margins = config->value("margins", 0).toInt();
@@ -826,19 +836,26 @@ namespace Utils
             xcb_atom_t type[] = {ewmh->_NET_WM_WINDOW_TYPE_DOCK};
             xcb_ewmh_set_wm_state(ewmh, panel->winId(), 2, states);
             xcb_ewmh_set_wm_window_type(ewmh, panel->winId(), 1, type);
+
+            // Get total width and height of desktop
+            uint32_t dw, dh;
+            xcb_ewmh_get_desktop_geometry_reply(ewmh, xcb_ewmh_get_desktop_geometry(ewmh, 0), &dw, &dh, nullptr);
+
             xcb_ewmh_wm_strut_partial_t strut;
             memset(&strut, 0, sizeof(xcb_ewmh_wm_strut_partial_t));
             if(bottom)
             {
-                xcb_ewmh_set_wm_strut(ewmh, panel->winId(), 0, 0, 0, panel->height());
-                strut.bottom = panel->height();
+                int bottom = panel->height() + dh - (screen.height() + screen.y());
+                xcb_ewmh_set_wm_strut(ewmh, panel->winId(), 0, 0, 0, bottom);
+                strut.bottom = bottom;
                 strut.bottom_start_x = screen.x();
                 strut.bottom_end_x = screen.x() + screen.width() - 1;
             }
             else
             {
-                xcb_ewmh_set_wm_strut(ewmh, panel->winId(), 0, 0, panel->height(), 0);
-                strut.top = panel->height();
+                int top = panel->height() + screen.y();
+                xcb_ewmh_set_wm_strut(ewmh, panel->winId(), 0, 0, top, 0);
+                strut.top = top;
                 strut.top_start_x = screen.x();
                 strut.top_end_x = screen.x() + screen.width() - 1;
             }
