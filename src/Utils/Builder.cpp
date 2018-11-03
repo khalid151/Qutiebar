@@ -684,6 +684,11 @@ namespace Utils
                         int l = config->value("progress-length").toInt();
                         progress = std::make_unique<Progress>(l, padding);
                     }
+                    else
+                    {
+                        config->endGroup();
+                        continue; // Skip module if no progress is specified.
+                    }
 
                     progress->updateProgress(percentage);
                     events = progress->event;
