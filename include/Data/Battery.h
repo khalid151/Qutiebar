@@ -1,7 +1,6 @@
 #ifndef BATTERYDATA_H
 #define BATTERYDATA_H
 
-#include "Modules/DisplayItem.h"
 #include "Utils/Misc.h"
 
 namespace Data

@@ -9,6 +9,7 @@
 
 #include "Data/Battery.h"
 #include "Data/Backlight.h"
+#include "Data/Process.h"
 #include "Modules/Group.h"
 #include "Utils/Builder.h"
 
@@ -605,8 +606,6 @@ namespace Utils
 
             config->endGroup();
 
-            // Building custom modules here.
-            // They're either a text, progress or an icon.
             buildCustomModules(name);
         }
 
@@ -621,7 +620,7 @@ namespace Utils
             return !keys.filter(regex).isEmpty();
         };
 
-        QStringList types{"text", "progress", "icon", "script"};
+        QStringList types{"text", "progress", "icon", "percentage", "script"};
         for(const auto &type:types)
         {
             if(hasModule(type, name))
@@ -631,6 +630,8 @@ namespace Utils
                 using namespace Widgets;
 
                 int padding = config->value("padding", 0).toInt();
+                int width = config->value("width", 25).toInt();
+                int height = config->value("height", 25).toInt();
                 Utils::EventHandler *events;
 
                 // Process properties
@@ -705,9 +706,8 @@ namespace Utils
                         w->load(p->readAll().simplified());
                     };
                     auto defaultIcon = config->value("default-icon", ":empty.svg").toString();
-                    int width = config->value("width", 25).toInt();
-                    int height = config->value("height", 25).toInt();
                     auto icon = std::make_unique<Icon>(defaultIcon, width, height, padding);
+                    events = icon->event;
                     setProperties(icon.get());
                     auto aa = config->value("antialiasing", true).toBool();
                     icon->setAntialiasing(aa, aa);
@@ -715,6 +715,15 @@ namespace Utils
                             icon.get(), std::bind(readStdOut, proc.get(), icon.get()));
                     widgets.insert(std::make_pair(name, icon.get()));
                     moduleList.push_back(std::move(icon));
+                }
+                else if(type == "percentage")
+                {
+                    auto data = std::make_unique<Data::Process>(proc.get());
+                    auto display = buildDisplayItem(data.get(), width, height, padding);
+                    events = display->event;
+                    widgets.insert(std::make_pair(name, display.get()));
+                    moduleList.push_back(std::move(display));
+                    dataList.push_back(std::move(data));
                 }
 
                 if(config->contains("exec"))

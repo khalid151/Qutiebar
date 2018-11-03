@@ -74,6 +74,11 @@ namespace Modules
         connect(timer, &QTimer::timeout, this, &DisplayItem::updateItem);
         timer->start(updateRate);
         updateItem();
+
+        // Removing event filters for child widgets
+        if(_icon != nullptr) _icon->removeEventFilter(_icon->event);
+        if(_percentage != nullptr) _percentage->removeEventFilter(_percentage->event);
+        if(_progress != nullptr) _progress->removeEventFilter(_progress->event);
     }
 
     void

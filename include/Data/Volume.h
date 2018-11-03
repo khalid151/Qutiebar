@@ -3,7 +3,6 @@
 
 #include <alsa/asoundlib.h>
 
-#include "Modules/DisplayItem.h"
 #include "Utils/Misc.h"
 
 namespace Data

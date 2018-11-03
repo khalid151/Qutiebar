@@ -8,8 +8,8 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_BUILD_TYPE Debug)
 
 set(MAJOR 0)
-set(MINOR 1)
-set(PATCH 2)
+set(MINOR 2)
+set(PATCH 0)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/Version.h.in
             ${CMAKE_CURRENT_SOURCE_DIR}/include/Version.h)
