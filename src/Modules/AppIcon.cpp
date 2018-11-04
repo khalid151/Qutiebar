@@ -6,7 +6,6 @@ namespace Modules
         : Widgets::Icon(":empty.svg", w, h, p, parent)
     {
         x_handler = handler;
-        handler->trackWinId();
         connect(handler, &Utils::X11EventHandler::winIdChanged, this, &AppIcon::updateIcon);
     }
 

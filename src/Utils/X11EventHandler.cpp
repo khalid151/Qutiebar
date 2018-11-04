@@ -6,11 +6,11 @@
 
 namespace Utils
 {
-    X11EventHandler::X11EventHandler(QObject *parent) : QThread(parent)
+    X11EventHandler::X11EventHandler()
     {
         conn = xcb_connect(nullptr, nullptr);
-        ewmh = new xcb_ewmh_connection_t;
-        xcb_ewmh_init_atoms_replies(ewmh, xcb_ewmh_init_atoms(conn, ewmh), nullptr);
+        auto cookie = xcb_ewmh_init_atoms(conn, &ewmh);
+        xcb_ewmh_init_atoms_replies(&ewmh, cookie, nullptr);
         root = xcb_setup_roots_iterator(xcb_get_setup(conn)).data->root;
         track(root, true);
         xcb_flush(conn);
@@ -20,9 +20,7 @@ namespace Utils
     X11EventHandler::~X11EventHandler()
     {
         xcb_disconnect(conn);
-        xcb_ewmh_connection_wipe(ewmh);
-        free(ewmh);
-        stop();
+        xcb_ewmh_connection_wipe(&ewmh);
     }
 
     QIcon
@@ -32,7 +30,7 @@ namespace Utils
         if(win == XCB_NONE) return icon; // If there's no window in focus
 
         xcb_ewmh_get_wm_icon_reply_t reply;
-        xcb_ewmh_get_wm_icon_reply(ewmh, xcb_ewmh_get_wm_icon(ewmh, win), &reply, nullptr);
+        xcb_ewmh_get_wm_icon_reply(&ewmh, xcb_ewmh_get_wm_icon(&ewmh, win), &reply, nullptr);
         if(reply.num_icons == 0) return icon; // In case there are no icons.
         auto iter = xcb_ewmh_get_wm_icon_iterator(&reply);
         while(iter.index < reply.num_icons)
@@ -53,7 +51,7 @@ namespace Utils
     X11EventHandler::getTitle(xcb_window_t win)
     {
         xcb_ewmh_get_utf8_strings_reply_t reply{};
-        xcb_ewmh_get_wm_name_reply(ewmh, xcb_ewmh_get_wm_name(ewmh, win), &reply, nullptr);
+        xcb_ewmh_get_wm_name_reply(&ewmh, xcb_ewmh_get_wm_name(&ewmh, win), &reply, nullptr);
         QString title = QString::fromUtf8(reply.strings, reply.strings_len);
         xcb_ewmh_get_utf8_strings_reply_wipe(&reply);
         return title;
@@ -89,30 +87,32 @@ namespace Utils
         emit classChanged(getWindowClass(win));
         emit winIdChanged(win);
         getCurrentDesktop();
+
         while(running)
         {
-            event = xcb_wait_for_event(conn);
-                if(event->response_type == XCB_PROPERTY_NOTIFY && titleEvents)
+            auto event = xcb_wait_for_event(conn);
+            if(event->response_type == XCB_PROPERTY_NOTIFY)
+            {
+                auto notifyEvent = reinterpret_cast<xcb_property_notify_event_t*>(event);
+                if(notifyEvent->atom == ewmh._NET_ACTIVE_WINDOW)
                 {
-                    auto *notifyEvent = (xcb_property_notify_event_t*)event;
-                    if (notifyEvent->atom == ewmh->_NET_ACTIVE_WINDOW)
-                    {
-                        track(win, false);
-                        getWindowID(&win);
-                        emit titleChanged(getTitle(win));
-                        if(classEvents)
-                            emit classChanged(getWindowClass(win));
-                        if(idEvents)
-                            emit winIdChanged(win);
-                        track(win, true);
-                    } else if (notifyEvent->atom == ewmh->_NET_WM_NAME || notifyEvent->atom == ewmh->_NET_WM_VISIBLE_NAME) {
-                        getWindowID(&win);
-                        emit titleChanged(getTitle(win));
-                    } else if (notifyEvent->atom == ewmh->_NET_CURRENT_DESKTOP && desktopEvents) {
-                        getCurrentDesktop();
-                    }
+                    track(win, false);
+                    getWindowID(&win);
+                    emit titleChanged(getTitle(win));
+                    emit winIdChanged(win);
+                    track(win, true);
                 }
-                free(event);
+                else if (notifyEvent->atom == ewmh._NET_WM_NAME || notifyEvent->atom == ewmh._NET_WM_VISIBLE_NAME)
+                {
+                    getWindowID(&win);
+                    emit titleChanged(getTitle(win));
+                }
+                else if (notifyEvent->atom == ewmh._NET_CURRENT_DESKTOP)
+                {
+                    getCurrentDesktop();
+                }
+            }
+            free(event);
         }
     }
 
@@ -124,13 +124,12 @@ namespace Utils
             const unsigned int value{enable? XCB_EVENT_MASK_PROPERTY_CHANGE : XCB_EVENT_MASK_NO_EVENT};
             xcb_change_window_attributes(conn, win, XCB_CW_EVENT_MASK, &value);
         }
-        getTitle(win); // I'm not completely sure why calling this function makes title tracking work :/
     }
 
     void
     X11EventHandler::getWindowID(xcb_window_t *win)
     {
-        xcb_ewmh_get_active_window_reply(ewmh, xcb_ewmh_get_active_window(ewmh, 0), win, nullptr);
+        xcb_ewmh_get_active_window_reply(&ewmh, xcb_ewmh_get_active_window(&ewmh, 0), win, nullptr);
     }
 
     void
@@ -140,8 +139,8 @@ namespace Utils
         // also, urgent flags?
         unsigned int index = XCB_NONE;
         xcb_ewmh_get_utf8_strings_reply_t reply{};
-        xcb_ewmh_get_desktop_names_reply(ewmh, xcb_ewmh_get_desktop_names(ewmh, 0), &reply, nullptr);
-        xcb_ewmh_get_current_desktop_reply(ewmh, xcb_ewmh_get_current_desktop(ewmh, 0), &index, nullptr);
+        xcb_ewmh_get_desktop_names_reply(&ewmh, xcb_ewmh_get_desktop_names(&ewmh, 0), &reply, nullptr);
+        xcb_ewmh_get_current_desktop_reply(&ewmh, xcb_ewmh_get_current_desktop(&ewmh, 0), &index, nullptr);
         QString desktops = QString::fromUtf8(reply.strings, reply.strings_len);
         xcb_ewmh_get_utf8_strings_reply_wipe(&reply);
         auto stringList = desktops.split('\0');
@@ -153,8 +152,9 @@ namespace Utils
     X11EventHandler::stop()
     {
         running = false;
-        // xcb_wait_for_event() is blocking until it gets an event, so here's an event :P
-        xcb_send_event(conn, false, root, XCB_EVENT_MASK_NO_EVENT, "");
+        xcb_property_notify_event_t event;
+        memset(&event, 0, sizeof(xcb_property_notify_event_t));
+        xcb_send_event(conn, false, root, XCB_EVENT_MASK_NO_EVENT, reinterpret_cast<const char*>(&event));
         xcb_flush(conn);
         quit();
         wait();

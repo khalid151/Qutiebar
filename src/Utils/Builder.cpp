@@ -337,7 +337,6 @@ namespace Utils
                 setProperties(title.get());
 
                 auto wm_class = config->value("class", false).toBool();
-                wm_class ? xevents->trackClass() : xevents->trackTitle();
                 QObject::connect(xevents.get(), wm_class ?
                         &Utils::X11EventHandler::classChanged : &Utils::X11EventHandler::titleChanged,
                         title.get(), &Widgets::Text::updateText);
@@ -372,7 +371,6 @@ namespace Utils
             else if(type == "workspace")
             {
                 useXEvents = true;
-                xevents->trackWorkspace();
                 Widgets::Icon::IconType ic;
                 auto iconType = config->value("icon-type", "fonticon").toString().toLower();
                 if(iconType == "fonticon" || iconType == "text") ic = Widgets::Icon::TEXT;
