@@ -1,14 +1,13 @@
-#include <QTimer>
-
 #include "Modules/DisplayItem.h"
 
 namespace Modules
 {
-    DisplayItem::DisplayItem(Type display, TextLocation location, int w, int h,
-            int padding, int updateRate, QWidget *parent)
-        : QWidget(parent), Utils::WidgetProperties(this)
+    using namespace DisplayType;
+
+    DisplayItem::DisplayItem(Utils::DataModel *m, int padding)
+        : Utils::WidgetProperties(this)
     {
-        event = new Utils::EventHandler;
+        event = new Utils::EventHandler(this);
         setAttribute(Qt::WA_Hover);
         installEventFilter(event);
 
@@ -16,88 +15,58 @@ namespace Modules
         this->padding = padding;
         layoutContainer.setContentsMargins(padding, 0, padding, 0);
         layoutContainer.setSpacing(0);
-        displayType = display;
-        textLocation = location;
 
-        switch(display)
-        {
-            case Type::TEXT:
-                _percentage = std::make_unique<Widgets::Text>("", padding, this);
-                _percentage->setStyleSheet("background: none; border: none");
-                layoutContainer.addWidget(_percentage.get());
-                break;
-            case Type::FONTICON:
-                _icon = std::make_unique<Widgets::Icon>("", 10, padding, this);
-                break;
-            case Type::PIXICON:
-                _icon = std::make_unique<Widgets::Icon>("", h, w, padding, this);
-                break;
-            case Type::CIRCLE:
-                _progress = std::make_unique<Widgets::Progress>(w, false, 0, this);
-                layoutContainer.addWidget(_progress.get());
-                break;
-            case Type::TEXTCIRCLE:
-                _progress = std::make_unique<Widgets::Progress>(w, true, 0, this);
-                layoutContainer.addWidget(_progress.get());
-                break;
+        M = m;
+        unit = M->getUnit();
+
+        connect(M, &Utils::DataModel::update, this, &DisplayItem::update);
+    }
+
+    void
+    DisplayItem::addIconDisplay(const QString &type, int w, int h, int pt)
+    {
+        auto size = font().pointSize();
+        if(type == "name") {
+            _icon = std::make_unique<Widgets::Icon>(M->getName(), size, padding, this);
+            name = true;
         }
+        else if("fonticon")
+            _icon = std::make_unique<Widgets::Icon>(" ", pt, padding, this);
+        else if("pixmap")
+            _icon = std::make_unique<Widgets::Icon>(":empty.svg", w, h, padding, this);
 
-        // Text location relative to icon
-        if(location != TextLocation::NONE)
+        if(!type.isEmpty())
         {
-            _percentage = std::make_unique<Widgets::Text>("", padding, this);
-            _percentage->setStyleSheet("background: none; border: none");
-            switch(location)
-            {
-                case TextLocation::LEFT:
-                    layoutContainer.addWidget(_percentage.get());
-                    layoutContainer.addWidget(_icon.get());
-                    break;
-                case TextLocation::RIGHT:
-                    layoutContainer.addWidget(_icon.get());
-                    layoutContainer.addWidget(_percentage.get());
-                    break;
-                case TextLocation::NONE:
-                    break;
-            }
-        } else if(_icon != nullptr)
-        {
+            _icon->removeEventFilter(_icon.get()->event);
             layoutContainer.addWidget(_icon.get());
+            update();
         }
-
-        primaryColor = secondaryColor = Qt::black;
-
-        if(_progress != nullptr)
-            _progress->setStyle(4, Qt::white, Qt::black, Qt::white, 2);
-
-        auto *timer = new QTimer(this);
-        connect(timer, &QTimer::timeout, this, &DisplayItem::updateItem);
-        timer->start(updateRate);
-        updateItem();
-
-        // Removing event filters for child widgets
-        if(_icon != nullptr) _icon->removeEventFilter(_icon->event);
-        if(_percentage != nullptr) _percentage->removeEventFilter(_percentage->event);
-        if(_progress != nullptr) _progress->removeEventFilter(_progress->event);
     }
 
     void
-    DisplayItem::setIcons(const QStringList &iconsList)
+    DisplayItem::addDataDisplay(int r, int l)
     {
-        primaryIcons = iconsList;
-    }
-
-    void
-    DisplayItem::setIcons(const QStringList &list1, const QStringList &list2)
-    {
-        primaryIcons = list1;
-        secondaryIcons = list2;
-    }
-
-    void
-    DisplayItem::setColor(const QColor &c)
-    {
-        primaryColor = c;
+        if(!r && !l)
+        {
+            dataType = Type::Text;
+            _data = std::make_unique<Widgets::Text>("", padding, this);
+            _data->setFont(font());
+            _data->removeEventFilter(dynamic_cast<Widgets::Text*>(_data.get())->event);
+        }
+        else if(r && !l)
+        {
+            dataType = Type::Circle;
+            _data = std::make_unique<Widgets::Progress>(r, true, 0, this);
+            _data->removeEventFilter(dynamic_cast<Widgets::Progress*>(_data.get())->event);
+        }
+        else
+        {
+            dataType = Type::Line;
+            _data = std::make_unique<Widgets::Progress>(l, 0, this);
+            _data->removeEventFilter(dynamic_cast<Widgets::Progress*>(_data.get())->event);
+        }
+        layoutContainer.addWidget(data());
+        update();
     }
 
     void
@@ -108,90 +77,73 @@ namespace Modules
     }
 
     void
-    DisplayItem::enableIconColorChange(bool enable)
+    DisplayItem::setIcons(const QStringList &pi, const QStringList &si)
     {
-        staticIconColor = !enable;
-    }
-
-    void
-    DisplayItem::setData(Utils::DataModel *m)
-    {
-        M = m;
-        max = M->getMax();
-        modelHasState = M->hasState();
-        updateItem();
+        primaryIcons = pi;
+        secondaryIcons = si;
     }
 
     // Private
     void
-    DisplayItem::updateItem()
+    DisplayItem::update()
     {
-        switch(displayType)
+        if(_icon != nullptr && !primaryIcons.isEmpty() && !name)
         {
-            case Type::CIRCLE:
-            case Type::TEXTCIRCLE:
-                _progress->updateProgress(getPercentage());
-                _progress->update();
-                if(modelHasState)
-                {
-                    if(M->getState()) _progress->setColor(primaryColor);
-                    else _progress->setColor(secondaryColor);
-                }
-                break;
-            case Type::TEXT:
-                _percentage->setText(QString("%1%").arg(QString::number(getPercentage())));
-                if(modelHasState)
-                {
-                    if(M->getState()) _percentage->setForeground(primaryColor);
-                    else _percentage->setForeground(secondaryColor);
-                }
-                break;
-            case Type::FONTICON:
-            case Type::PIXICON:
-                if(_percentage !=nullptr)
-                    _percentage->setText(QString("%1%").arg(QString::number(getPercentage())));
-                if(modelHasState)
-                {
-                    if(!primaryIcons.isEmpty() && !secondaryIcons.isEmpty())
-                    {
-                        if(M->getState())
-                            _icon->load(getCurrentIcon(primaryIcons));
-                        else if(!M->getState())
-                            _icon->load(getCurrentIcon(secondaryIcons));
-                        else if(M->getState() == 2)
-                            _icon->load(primaryIcons.at(primaryIcons.count() - 1)); // Mostly for battery, last icon would represent full.
+            if(hasState)
+            {
+                if(M->getState())
+                    _icon.get()->load(getCurrentIcon(primaryIcons));
+                else if(!secondaryIcons.isEmpty())
+                    _icon.get()->load(getCurrentIcon(secondaryIcons));
+            }
+            else
+                _icon.get()->load(getCurrentIcon(primaryIcons));
+        }
 
-                        if(!staticIconColor)
-                        {
-                            if(M->getState()) _icon->setForeground(primaryColor);
-                            else _icon->setForeground(secondaryColor);
-                        }
-                    }
-                }
+        // Update data here
+        if(_data != nullptr)
+        switch(dataType)
+        {
+            case Type::Text:
+                if(unit == "%")
+                    dynamic_cast<Widgets::Text*>(_data.get())->
+                    setText(QString::number(getPercent()).append(unit));
                 else
+                    dynamic_cast<Widgets::Text*>(_data.get())->
+                    setText(QString::number(M->getData()).append(unit));
+                if(hasState)
                 {
-                    if(!primaryIcons.isEmpty())
-                        _icon->load(getCurrentIcon(primaryIcons));
+                    if(M->getState())
+                        dynamic_cast<Widgets::Text*>(_data.get())->setForeground(primaryColor);
+                    else
+                        dynamic_cast<Widgets::Text*>(_data.get())->setForeground(secondaryColor);
+                }
+                break;
+            case Type::Circle:
+            case Type::Line:
+                dynamic_cast<Widgets::Progress*>(_data.get())->updateProgress(getPercent());
+                if(hasState)
+                {
+                    if(M->getState())
+                        dynamic_cast<Widgets::Progress*>(_data.get())->setColor(primaryColor);
+                    else
+                        dynamic_cast<Widgets::Progress*>(_data.get())->setColor(secondaryColor);
                 }
                 break;
         }
     }
 
     int
-    DisplayItem::getPercentage()
+    DisplayItem::getPercent()
     {
-        if(M != nullptr)
-            return static_cast<int>(100 * static_cast<float>(M->getData())/max);
-        else
-            return 0;
+        return static_cast<int>(100 * static_cast<float>(M->getData())/M->getMax());
     }
 
     QString
     DisplayItem::getCurrentIcon(const QStringList &l)
     {
-       int index = (getPercentage() / (100/l.count()));
+       int index = (getPercent() / (100/l.count()));
        if(index < l.count()) return l.at(index);
        else return l.at(index - 1);
     }
-
 }

@@ -10,7 +10,7 @@ namespace Data
     class Volume : public Utils::DataModel
     {
         public:
-            Volume(const QString&, const QString&);
+            Volume(const QString&, const QString&, int = 1000);
             ~Volume();
 
         private:
@@ -19,6 +19,8 @@ namespace Data
             snd_mixer_elem_t *elem;
             long max{};
             int getData(); // should return volume here
+            QString getName() { return "Volume"; }
+            QString getUnit() { return "%"; }
     };
 }
 

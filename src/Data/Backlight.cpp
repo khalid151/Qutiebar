@@ -1,11 +1,13 @@
 #include <QFile>
 #include <QTextStream>
+#include <QTimer>
+
 
 #include "Data/Backlight.h"
 
 namespace Data
 {
-    Backlight::Backlight(const QString &backlight)
+    Backlight::Backlight(const QString &backlight, int updateRate)
     {
         this->backlight = backlight;
         QFile file(QString("%1/max_brightness").arg(backlight));
@@ -15,6 +17,10 @@ namespace Data
             maxBrightness = in.readAll().trimmed().toInt();
             file.close();
         }
+
+        auto *timer = new QTimer(this);
+        connect(timer, &QTimer::timeout, this, [this](){ emit update(); });
+        timer->start(updateRate);
     }
 
     int

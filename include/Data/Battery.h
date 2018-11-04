@@ -8,13 +8,15 @@ namespace Data
     class Battery : public Utils::DataModel
     {
         public:
-            Battery(const QString&);
+            Battery(const QString&, int = 1000);
 
         private:
             QString battery;
             bool hasState() { return true; }
             int getState();
             int getData();
+            QString getName() { return "Battery"; }
+            QString getUnit() { return "%"; }
     };
 }
 

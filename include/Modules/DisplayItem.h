@@ -12,43 +12,41 @@
 
 namespace Modules
 {
+    namespace DisplayType
+    {
+        enum Type{Text, Circle, Line};
+    }
+
     class DisplayItem : public QWidget, public Utils::WidgetProperties
     {
         public:
-            enum Type{TEXT, FONTICON, PIXICON, CIRCLE, TEXTCIRCLE};
-            enum TextLocation{LEFT,RIGHT,NONE};
+            DisplayItem(Utils::DataModel*, int = 0);
 
-            DisplayItem(Type = Type::TEXT, TextLocation = TextLocation::NONE,
-                    int w = 20, int h = 20, int padding = 0,
-                    int updateRate = 1000, QWidget* parent = nullptr);
+            void addIconDisplay(const QString&, int, int, int);
+            void addDataDisplay(int = 0, int = 0);
 
-            void setIcons(const QStringList&);
-            void setIcons(const QStringList&, const QStringList&);
-            void setColor(const QColor&);
             void setColors(const QColor&, const QColor&);
-            void enableIconColorChange(bool = true);
-            void setData(Utils::DataModel*);
+            void setIcons(const QStringList&, const QStringList& = {});
 
-            Widgets::Text *percentage() { return _percentage.get(); }
-            Widgets::Icon *icon() { return _icon.get(); }
-            Widgets::Progress *progress() { return _progress.get(); }
+            // To style them in Builder
+            QWidget *icon() { return _icon.get(); }
+            QWidget *data() { return _data.get(); }
+
             Utils::EventHandler *event;
 
         private:
-            bool modelHasState = false;
-            bool staticIconColor = true;
-            char displayType, textLocation;
-            int max = 100;
-            QStringList primaryIcons, secondaryIcons;
-            QColor primaryColor, secondaryColor;
+            bool hasState = false, name = false;
+            DisplayType::Type dataType;
+            QColor primaryColor = Qt::black, secondaryColor = Qt::white;
             QHBoxLayout layoutContainer;
-            std::unique_ptr<Widgets::Text> _percentage;
-            std::unique_ptr<Widgets::Icon> _icon;
-            std::unique_ptr<Widgets::Progress> _progress;
+            QString unit = "";
+            QStringList primaryIcons, secondaryIcons;
             Utils::DataModel *M = nullptr;
+            std::unique_ptr<Widgets::Icon> _icon;
+            std::unique_ptr<QWidget> _data;
 
-            void updateItem();
-            int getPercentage();
+            void update();
+            int getPercent();
             QString getCurrentIcon(const QStringList&);
     };
 }

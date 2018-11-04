@@ -1,6 +1,7 @@
 #ifndef MISCFUNCTIONS_H
 #define MISCFUNCTIONS_H
 
+#include <QObject>
 #include <QStringList>
 #include <QColor>
 
@@ -32,13 +33,20 @@ namespace Utils
     };
 
     // Base class for DisplayItem data "modules"
-    class DataModel
+    class DataModel : public QObject
     {
+        Q_OBJECT
+
         public:
             virtual bool hasState() { return false; }
             virtual int getState() { return 0; }
             virtual int getMax() { return 100; }
             virtual int getData() = 0;
+            virtual QString getName() = 0;
+            virtual QString getUnit() { return ""; }
+
+        signals:
+            void update();
     };
 }
 

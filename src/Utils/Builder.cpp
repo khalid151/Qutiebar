@@ -125,6 +125,13 @@ namespace Utils
 
         if(config->contains("circle-icon"))
             p->setCircleIcon(config->value("circle-icon").toString());
+
+        int size = config->value("circle-icon-size", 8).toInt();
+        p->setFontSize(size);
+
+        auto icon = config->contains("circle-icon-color") ?
+            getConfiguredColor("circle-icon-color") : filled;
+        p->setFontColor(icon);
     }
 
     void
@@ -225,82 +232,63 @@ namespace Utils
 
     // Building functions
     std::unique_ptr<Modules::DisplayItem>
-    Builder::buildDisplayItem(Utils::DataModel *data, int w, int h, int p)
+    Builder::buildDisplayItem(Utils::DataModel *M, int p)
     {
-        // Creating modules based on changing percentage (0 - 100)
-        // using DataModel (Utils/Misc.h) to get said percentage.
         using namespace Modules;
-
-        auto update = config->value("update-rate", 1).toFloat();
-        DisplayItem::TextLocation tl;
-        if(config->contains("text-location"))
-        {
-            if(config->value("text-location").toString() == "left")
-                tl = DisplayItem::LEFT;
-            else if(config->value("text-location").toString() == "right")
-                tl = DisplayItem::RIGHT;
-            else
-                tl = DisplayItem::NONE;
-        }
-        else tl = DisplayItem::NONE;
-
-        // type: 0 -> TEXT, 1 -> FONTICON, 2 -> PIXICON, 3 -> CIRCLE, 4 -> TEXTCIRCLE
-        auto type = static_cast<DisplayItem::Type>(config->value("type", 0).toInt());
-        auto displayItem = std::make_unique<DisplayItem>(type, tl, w, h, p, update * 1000);
-        displayItem->setData(data);
-
+        auto displayItem = std::make_unique<DisplayItem>(M, p);
         setProperties(displayItem.get());
-        configureProgress(displayItem->progress());
+
+        int width = config->value("icon-width", 20).toInt();
+        int height = config->value("icon-height", 20).toInt();
+        int size = config->value("icon-size", 10).toInt();
+        int radius = config->value("progress-radius", 20).toInt();
+        int length = config->value("progress-length", 100).toInt();
+
+        auto icon = config->value("icon").toString().toLower();
+        auto data = config->value("data", "text").toString().toLower();
+        auto location = config->value("icon-location", "left").toString().toLower();
+
+        auto icons = config->value("icons").toStringList();
+        displayItem->setIcons(icons);
+
+        auto addData = [radius, length, data](auto d) {
+            if(data == "text")
+                d->addDataDisplay();
+            else if(data == "circle")
+                d->addDataDisplay(radius);
+            else if(data == "line")
+                d->addDataDisplay(0, length);
+        };
+
+        if(location == "left")
+        {
+            displayItem->addIconDisplay(icon, width, height, size);
+            addData(displayItem.get());
+        }
+        else if(location == "right")
+        {
+            addData(displayItem.get());
+            displayItem->addIconDisplay(icon, width, height, size);
+        }
+
+        if(data == "circle" || data == "line")
+            configureProgress(dynamic_cast<Widgets::Progress*>(displayItem->data()));
+
+        auto iconBG = config->contains("icon-background") ?
+            getConfiguredColor("icon-background") : Qt::transparent;
+        auto dataBG = config->contains("data-background") ?
+            getConfiguredColor("data-background") : Qt::transparent;
+
+        auto iconProps = std::make_unique<Utils::WidgetProperties>(displayItem->icon(), false);
+        auto dataProps = std::make_unique<Utils::WidgetProperties>(displayItem->data(), false);
+
+        iconProps->setBackground(iconBG);
+        dataProps->setBackground(dataBG);
 
         if(config->contains("icon-color"))
-            displayItem->enableIconColorChange(false);
-        else
-            displayItem->enableIconColorChange();
-
-        auto primaryIcons = config->value("icons").toStringList();
-        auto secondaryIcons = config->value("secondary-icons").toStringList();
-        if(!secondaryIcons.isEmpty())
-        {
-            displayItem->setIcons(primaryIcons, secondaryIcons);
-        } else
-            displayItem->setIcons(primaryIcons);
-
-        if(type == DisplayItem::TEXTCIRCLE || type == DisplayItem::CIRCLE)
-        {
-            if(config->contains("foreground"))
-            {
-                auto color = getConfiguredColor("foreground");
-                displayItem->progress()->setFontColor(color);
-            }
-            if(config->contains("font-size"))
-                displayItem->progress()->setFontSize(config->value("font-size").toInt());
-        }
-
-        if(config->contains("font-size") && displayItem->percentage() != nullptr)
-            displayItem->percentage()->setFontSize(config->value("font-size").toInt());
-        if(config->contains("icon-size") && displayItem->icon() != nullptr)
-            displayItem->icon()->resize(config->value("icon-size").toInt());
-
-        if(config->contains("percentage-color") && displayItem->percentage() != nullptr)
-        {
-            auto color = getConfiguredColor("percentage-color");
-            displayItem->percentage()->setForeground(color);
-        }
-        if(config->contains("icon-color") && displayItem->icon() != nullptr)
-        {
-            auto color = getConfiguredColor("icon-color");
-            displayItem->icon()->setForeground(color);
-        }
-        if(config->contains("percentage-background") && displayItem->percentage() != nullptr)
-        {
-            auto color = getConfiguredColor("percentage-background");
-            displayItem->percentage()->setBackground(color);
-        }
-        if(config->contains("icon-background") && displayItem->icon() != nullptr)
-        {
-            auto color = getConfiguredColor("icon-background");
-            displayItem->icon()->setBackground(color);
-        }
+            iconProps->setForeground(getConfiguredColor("icon-color"));
+        if(config->contains("data-color"))
+            dataProps->setForeground(getConfiguredColor("data-color"));
 
         return displayItem;
     }
@@ -327,6 +315,7 @@ namespace Utils
             int width = config->value("width", 25).toInt();
             int height = config->value("height", 25).toInt();
             int padding = config->value("padding", 0).toInt();
+            float update = config->value("update-rate", 1).toFloat();
 
             if(type == "appicon")
             {
@@ -368,9 +357,8 @@ namespace Utils
             }
             else if(type == "clock")
             {
-                auto update = config->value("update-rate", 1).toFloat();
                 auto format = config->value("format", "hh:mm a").toString();
-                auto clock = std::make_unique<Modules::Clock>(padding, format, update * 1000);
+                auto clock = std::make_unique<Modules::Clock>(padding, format, static_cast<int>(update * 1000));
                 clock->setAltFormat(config->value("alt-format", format).toString());
 
                 if(config->contains("time-zone"))
@@ -386,8 +374,9 @@ namespace Utils
                 useXEvents = true;
                 xevents->trackWorkspace();
                 Widgets::Icon::IconType ic;
-                if(config->value("pixmap", false).toBool()) ic = Widgets::Icon::PIXMAP;
-                else ic = Widgets::Icon::TEXT;
+                auto iconType = config->value("icon-type", "fonticon").toString().toLower();
+                if(iconType == "fonticon" || iconType == "text") ic = Widgets::Icon::TEXT;
+                else if(iconType == "pixmap") ic = Widgets::Icon::PIXMAP;
                 // Current -> only one workspace displayed at a time
                 auto t = config->value("current-only", false).toBool()? Modules::Desktops::CURRENT
                     : Modules::Desktops::POPULATED;
@@ -457,22 +446,17 @@ namespace Utils
             else if(type == "battery")
             {
                 auto battery = QString("/sys/class/power_supply/%1").arg(config->value("battery", "BAT0").toString());
-                auto batteryData = std::make_unique<Data::Battery>(battery);
-                auto batteryItem = buildDisplayItem(batteryData.get(), width, height, padding);
+                auto batteryData = std::make_unique<Data::Battery>(battery, static_cast<int>(update * 1000));
+                auto batteryItem = buildDisplayItem(batteryData.get(), padding);
 
                 auto charging = config->contains("charging-color") ?
                     getConfiguredColor("charging-color") : Qt::green;
                 auto discharging = config->contains("discharging-color") ?
                     getConfiguredColor("discharging-color") : Qt::black;
 
-                if(config->contains("charging-icons"))
-                {
-                    auto icons = config->value("charging-icons").toStringList();
-                    if(config->contains("discharging-icons"))
-                        batteryItem->setIcons(icons, config->value("discharging-icons").toStringList());
-                    else
-                        batteryItem->setIcons(icons, icons);
-                }
+                auto icons = config->value("charging-icons").toStringList();
+                auto sIcons = config->value("discharging-icons").toStringList();
+                batteryItem->setIcons(icons, sIcons);
 
                 batteryItem->setColors(charging, discharging);
 
@@ -485,8 +469,9 @@ namespace Utils
             {
                 auto soundcard = config->value("soundcard", "default").toString();
                 auto mixer = config->value("mixer", "Master").toString();
-                auto volumeData = std::make_unique<Data::Volume>(soundcard, mixer);
-                auto volumeItem = buildDisplayItem(volumeData.get(), width, height, padding);
+                auto volumeData = std::make_unique<Data::Volume>(
+                        soundcard, mixer, static_cast<int>(update * 1000));
+                auto volumeItem = buildDisplayItem(volumeData.get(), padding);
 
                 widgets.insert(std::make_pair(name, volumeItem.get()));
                 moduleList.push_back(std::move(volumeItem));
@@ -496,8 +481,9 @@ namespace Utils
             else if(type == "backlight")
             {
                 auto backlight = config->value("backlight", "intel_backlight").toString();
-                auto backlightData = std::make_unique<Data::Backlight>(backlight.prepend("/sys/class/backlight/"));
-                auto backlightItem = buildDisplayItem(backlightData.get(), width, height, padding);
+                auto backlightData = std::make_unique<Data::Backlight>(
+                        backlight.prepend("/sys/class/backlight/"), static_cast<int>(update * 1000));
+                auto backlightItem = buildDisplayItem(backlightData.get(), padding);
 
                 widgets.insert(std::make_pair(name, backlightItem.get()));
                 moduleList.push_back(std::move(backlightItem));
@@ -507,8 +493,6 @@ namespace Utils
             else if(type == "mpd" || type == "mpris")
             {
                 std::unique_ptr<Modules::MusicDisplay> music;
-                auto update = config->value("update-rate", 1).toFloat();
-
 #ifdef ENABLE_MPD
                 if(type == "mpd")
                 {
@@ -577,10 +561,10 @@ namespace Utils
                         if(config->contains("add-buttons"))
                         {
                             bool aa = config->value("antialiasing", true).toBool();
-                            auto type = config->value("button-type", "text").toString();
-                            if(type == "icon")
+                            auto type = config->value("button-type", "fonticon").toString().toLower();
+                            if(type == "pixmap")
                                 music->addButtons(width, height, aa, buttons);
-                            else
+                            else if(type == "fonticon" || type == "text")
                                 music->addButtons(iconSize, buttons);
                             auto props = std::make_unique<Utils::WidgetProperties>(music->getButtons());
                             if(config->contains("button-color"))
@@ -620,7 +604,7 @@ namespace Utils
             return !keys.filter(regex).isEmpty();
         };
 
-        QStringList types{"text", "progress", "icon", "percentage", "script"};
+        QStringList types{"text", "progress", "icon", "data", "script"};
         for(const auto &type:types)
         {
             if(hasModule(type, name))
@@ -716,10 +700,17 @@ namespace Utils
                     widgets.insert(std::make_pair(name, icon.get()));
                     moduleList.push_back(std::move(icon));
                 }
-                else if(type == "percentage")
+                else if(type == "data")
                 {
                     auto data = std::make_unique<Data::Process>(proc.get());
-                    auto display = buildDisplayItem(data.get(), width, height, padding);
+                    int max = config->value("max-value", 100).toInt();
+                    auto unit = config->value("unit", "%").toString();
+                    data->setMax(max);
+                    data->setUnit(unit);
+                    if(config->contains("name"))
+                        data->setName(config->value("name").toString());
+
+                    auto display = buildDisplayItem(data.get(), padding);
                     events = display->event;
                     widgets.insert(std::make_pair(name, display.get()));
                     moduleList.push_back(std::move(display));

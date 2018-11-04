@@ -1,5 +1,3 @@
-#include <functional>
-
 #include "Data/Process.h"
 
 namespace Data
@@ -8,19 +6,15 @@ namespace Data
     {
         this->proc = proc;
         QProcess::connect(proc, &QProcess::readyReadStandardOutput,
-                std::bind(&Process::setData, this));
+                [this]() { emit update(); });
     }
 
     int
     Process::getData()
     {
-        return data;
-    }
-
-    void
-    Process::setData()
-    {
         if(proc->isOpen())
             data = proc->readAll().simplified().toInt();
+        if(data > max) max = data; // Update max value if not specified.
+        return data;
     }
 }

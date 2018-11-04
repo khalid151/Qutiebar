@@ -1,13 +1,18 @@
 #include <QFile>
 #include <QTextStream>
+#include <QTimer>
 
 #include "Data/Battery.h"
 
 namespace Data
 {
-    Battery::Battery(const QString &battery)
+    Battery::Battery(const QString &battery, int updateRate)
     {
         this->battery = battery;
+
+        auto *timer = new QTimer(this);
+        connect(timer, &QTimer::timeout, this, [this](){ emit update(); });
+        timer->start(updateRate);
     }
 
     int

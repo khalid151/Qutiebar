@@ -8,7 +8,7 @@ namespace Data
     class Backlight : public Utils::DataModel
     {
         public:
-            Backlight(const QString&);
+            Backlight(const QString&, int = 1000);
 
             inline int getMax() { return maxBrightness; }
 
@@ -16,6 +16,8 @@ namespace Data
             QString backlight;
             int maxBrightness = 100;
             int getData();
+            QString getName() { return "Backlight"; }
+            QString getUnit() { return "%"; }
     };
 }
 

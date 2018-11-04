@@ -1,10 +1,11 @@
 #include <cmath>
+#include <QTimer>
 
 #include "Data/Volume.h"
 
 namespace Data
 {
-    Volume::Volume(const QString &card, const QString &selem_name)
+    Volume::Volume(const QString &card, const QString &selem_name, int updateRate)
     {
         long min;
         snd_mixer_open(&mixer, 1);
@@ -17,6 +18,10 @@ namespace Data
         snd_mixer_selem_id_set_name(selem_id, selem_name.toLatin1().data());
         elem = snd_mixer_find_selem(mixer, selem_id);
         snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
+
+        auto *timer = new QTimer(this);
+        connect(timer, &QTimer::timeout, this, [this](){ emit update(); });
+        timer->start(updateRate);
     }
 
     Volume::~Volume()

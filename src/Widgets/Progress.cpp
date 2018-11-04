@@ -91,7 +91,7 @@ namespace Widgets
     {
         showPercent = false;
         showIcon = true;
-        this->icon = icon;
+        this->icon = icon[0]; // Use one character only
     }
 
     void
