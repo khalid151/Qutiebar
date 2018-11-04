@@ -42,6 +42,7 @@ $ sudo make install
 ```
 
 ## TODO
+- [ ] FIX LEAKS :(
 - [ ] Menu module
 - [ ] Systray
 - [ ] Task switcher
