@@ -230,12 +230,23 @@ namespace Utils
         return modules;
     }
 
+    bool
+    Builder::hasModule(const QString &n)
+    {
+        for(const auto &k:config->allKeys())
+            if(k.contains(n)) return true;
+        return false;
+    }
+
     // Building functions
     std::unique_ptr<Modules::DisplayItem>
-    Builder::buildDisplayItem(Utils::DataModel *M, int p)
+    Builder::buildDisplayItem(Utils::DataModel *M)
     {
         using namespace Modules;
-        auto displayItem = std::make_unique<DisplayItem>(M, p);
+        int padding = config->value("padding", 0).toInt();
+        int icon_padding = config->value("icon-padding", 0).toInt();
+        int data_padding = config->value("data-padding", 0).toInt();
+        auto displayItem = std::make_unique<DisplayItem>(M, padding);
         setProperties(displayItem.get());
 
         int width = config->value("icon-width", 20).toInt();
@@ -249,26 +260,26 @@ namespace Utils
         auto location = config->value("icon-location", "left").toString().toLower();
 
         auto icons = config->value("icons").toStringList();
-        displayItem->setIcons(icons);
+        displayItem->setIcons(std::move(icons));
 
-        auto addData = [radius, length, data](auto d) {
+        auto addData = [radius, length, data, data_padding](auto d) {
             if(data == "text")
-                d->addDataDisplay();
+                d->addDataDisplay(0, 0, data_padding);
             else if(data == "circle")
-                d->addDataDisplay(radius);
+                d->addDataDisplay(radius, 0, data_padding);
             else if(data == "line")
-                d->addDataDisplay(0, length);
+                d->addDataDisplay(0, length, data_padding);
         };
 
         if(location == "left")
         {
-            displayItem->addIconDisplay(icon, width, height, size);
+            displayItem->addIconDisplay(icon, width, height, size, icon_padding);
             addData(displayItem.get());
         }
         else if(location == "right")
         {
             addData(displayItem.get());
-            displayItem->addIconDisplay(icon, width, height, size);
+            displayItem->addIconDisplay(icon, width, height, size, icon_padding);
         }
 
         if(data == "circle" || data == "line")
@@ -279,16 +290,18 @@ namespace Utils
         auto dataBG = config->contains("data-background") ?
             getConfiguredColor("data-background") : Qt::transparent;
 
-        auto iconProps = std::make_unique<Utils::WidgetProperties>(displayItem->icon(), false);
         auto dataProps = std::make_unique<Utils::WidgetProperties>(displayItem->data(), false);
-
-        iconProps->setBackground(iconBG);
         dataProps->setBackground(dataBG);
-
-        if(config->contains("icon-color"))
-            iconProps->setForeground(getConfiguredColor("icon-color"));
         if(config->contains("data-color"))
             dataProps->setForeground(getConfiguredColor("data-color"));
+
+        if(displayItem->icon() != nullptr)
+        {
+            auto iconProps = std::make_unique<Utils::WidgetProperties>(displayItem->icon(), false);
+            iconProps->setBackground(iconBG);
+            if(config->contains("icon-color"))
+                iconProps->setForeground(getConfiguredColor("icon-color"));
+        }
 
         return displayItem;
     }
@@ -297,12 +310,6 @@ namespace Utils
     Builder::buildModules()
     {
         auto modules = generateModulesList(); // Just what panels need
-
-        auto hasModule = [this](auto n) {
-            auto keys = config->allKeys();
-            QRegularExpression regex(QString(".*/%1/.*").arg(n));
-            return !keys.filter(regex).isEmpty();
-        };
 
         for(const auto &name:modules)
         {
@@ -383,7 +390,7 @@ namespace Utils
                 if(config->contains("default-icon"))
                     iconList.append(QString("default:%1").arg(config->value("default-icon").toString()));
 
-                auto desktops = std::make_unique<Modules::Desktops>(t, ic, iconList, padding);
+                auto desktops = std::make_unique<Modules::Desktops>(t, ic, std::move(iconList), padding);
 
                 auto aa = config->value("antialiasing", true).toBool();
                 setProperties(desktops.get());
@@ -412,8 +419,9 @@ namespace Utils
                 } else
                     l= Modules::Desktops::NONE;
 
-                desktops->setIndicatorStyle(Modules::Desktops::ACTIVE, foreground, background,
-                        line, config->value("active-line-width", 0).toInt(), l);
+                desktops->setIndicatorStyle(Modules::Desktops::ACTIVE,
+                        std::move(foreground), std::move(background),
+                        std::move(line), config->value("active-line-width", 0).toInt(), l);
 
                 foreground = config->contains("inactive-foreground") ?
                     getConfiguredColor("inactive-foreground") : foreground;
@@ -432,8 +440,9 @@ namespace Utils
                 if(config->contains("font-size"))
                     desktops->resize(config->value("font-size").toInt());
 
-                desktops->setIndicatorStyle(Modules::Desktops::INACTIVE, foreground, background,
-                        line, config->value("inactive-line-width", 0).toInt(), l);
+                desktops->setIndicatorStyle(Modules::Desktops::INACTIVE,
+                        std::move(foreground), std::move(background),
+                        std::move(line), config->value("inactive-line-width", 0).toInt(), l);
 
                 QObject::connect(xevents.get(), &Utils::X11EventHandler::desktopChanged,
                         desktops.get(), &Modules::Desktops::updateDesktops);
@@ -445,7 +454,7 @@ namespace Utils
             {
                 auto battery = QString("/sys/class/power_supply/%1").arg(config->value("battery", "BAT0").toString());
                 auto batteryData = std::make_unique<Data::Battery>(battery, static_cast<int>(update * 1000));
-                auto batteryItem = buildDisplayItem(batteryData.get(), padding);
+                auto batteryItem = buildDisplayItem(batteryData.get());
 
                 auto charging = config->contains("charging-color") ?
                     getConfiguredColor("charging-color") : Qt::green;
@@ -454,9 +463,9 @@ namespace Utils
 
                 auto icons = config->value("charging-icons").toStringList();
                 auto sIcons = config->value("discharging-icons").toStringList();
-                batteryItem->setIcons(icons, sIcons);
+                batteryItem->setIcons(std::move(icons), std::move(sIcons));
 
-                batteryItem->setColors(charging, discharging);
+                batteryItem->setColors(std::move(charging), std::move(discharging));
 
                 widgets.insert(std::make_pair(name, batteryItem.get()));
                 moduleList.push_back(std::move(batteryItem));
@@ -469,7 +478,7 @@ namespace Utils
                 auto mixer = config->value("mixer", "Master").toString();
                 auto volumeData = std::make_unique<Data::Volume>(
                         soundcard, mixer, static_cast<int>(update * 1000));
-                auto volumeItem = buildDisplayItem(volumeData.get(), padding);
+                auto volumeItem = buildDisplayItem(volumeData.get());
 
                 widgets.insert(std::make_pair(name, volumeItem.get()));
                 moduleList.push_back(std::move(volumeItem));
@@ -481,7 +490,7 @@ namespace Utils
                 auto backlight = config->value("backlight", "intel_backlight").toString();
                 auto backlightData = std::make_unique<Data::Backlight>(
                         backlight.prepend("/sys/class/backlight/"), static_cast<int>(update * 1000));
-                auto backlightItem = buildDisplayItem(backlightData.get(), padding);
+                auto backlightItem = buildDisplayItem(backlightData.get());
 
                 widgets.insert(std::make_pair(name, backlightItem.get()));
                 moduleList.push_back(std::move(backlightItem));
@@ -596,16 +605,10 @@ namespace Utils
     void
     Builder::buildCustomModules(const QString &name)
     {
-        auto hasModule = [this](auto t, auto n) {   // To check if a custom module exists
-            auto keys = config->allKeys();
-            QRegularExpression regex(QString("%1/%2/.*").arg(t, n));
-            return !keys.filter(regex).isEmpty();
-        };
-
         QStringList types{"text", "progress", "icon", "data", "script"};
         for(const auto &type:types)
         {
-            if(hasModule(type, name))
+            if(hasModule(QString("%1/%2").arg(type, name)))
             {
                 config->beginGroup(QString("%1/%2").arg(type, name));
 
@@ -701,6 +704,7 @@ namespace Utils
                 else if(type == "data")
                 {
                     auto data = std::make_unique<Data::Process>(proc.get());
+                    auto display = buildDisplayItem(data.get());
                     int max = config->value("max-value", 100).toInt();
                     auto unit = config->value("unit", "%").toString();
                     data->setMax(max);
@@ -708,7 +712,6 @@ namespace Utils
                     if(config->contains("name"))
                         data->setName(config->value("name").toString());
 
-                    auto display = buildDisplayItem(data.get(), padding);
                     events = display->event;
                     widgets.insert(std::make_pair(name, display.get()));
                     moduleList.push_back(std::move(display));
@@ -820,7 +823,8 @@ namespace Utils
             padding = config->value("padding", 0).toInt();
             margins = config->value("margins", 0).toInt();
 
-            panelList.push_back(std::make_unique<Widgets::Panel>(screen, width, height, margins, padding));
+            auto up = std::make_unique<Widgets::Panel>(screen, width, height, margins, padding);
+            panelList.push_back(std::move(up));
             auto panel = panelList.back().get();
             bool over = config->value("over-windows", true).toBool();
             bool bottom = config->value("bottom", false).toBool();
@@ -829,27 +833,27 @@ namespace Utils
 
             // Setting EWMH hints
             auto conn = QX11Info::connection();
-            xcb_ewmh_connection_t *ewmh;
-            ewmh = new xcb_ewmh_connection_t;
-            xcb_ewmh_init_atoms_replies(ewmh, xcb_ewmh_init_atoms(conn, ewmh), nullptr);
+            xcb_ewmh_connection_t ewmh;
+            auto ewmh_cookie = xcb_ewmh_init_atoms(conn, &ewmh);
+            xcb_ewmh_init_atoms_replies(&ewmh, ewmh_cookie, nullptr);
 
-            xcb_atom_t states[2] = {ewmh->_NET_WM_STATE_STICKY};
-            if(over) states[1] = ewmh->_NET_WM_STATE_ABOVE;
-            else states[1] = ewmh->_NET_WM_STATE_BELOW;
-            xcb_atom_t type[] = {ewmh->_NET_WM_WINDOW_TYPE_DOCK};
-            xcb_ewmh_set_wm_state(ewmh, panel->winId(), 2, states);
-            xcb_ewmh_set_wm_window_type(ewmh, panel->winId(), 1, type);
+            xcb_atom_t states[2] = {ewmh._NET_WM_STATE_STICKY};
+            if(over) states[1] = ewmh._NET_WM_STATE_ABOVE;
+            else states[1] = ewmh._NET_WM_STATE_BELOW;
+            xcb_atom_t type[] = {ewmh._NET_WM_WINDOW_TYPE_DOCK};
+            xcb_ewmh_set_wm_state(&ewmh, panel->winId(), 2, states);
+            xcb_ewmh_set_wm_window_type(&ewmh, panel->winId(), 1, type);
 
             // Get total width and height of desktop
             uint32_t dw, dh;
-            xcb_ewmh_get_desktop_geometry_reply(ewmh, xcb_ewmh_get_desktop_geometry(ewmh, 0), &dw, &dh, nullptr);
+            xcb_ewmh_get_desktop_geometry_reply(&ewmh, xcb_ewmh_get_desktop_geometry(&ewmh, 0), &dw, &dh, nullptr);
 
             xcb_ewmh_wm_strut_partial_t strut;
             memset(&strut, 0, sizeof(xcb_ewmh_wm_strut_partial_t));
             if(bottom)
             {
                 int bottom = panel->height() + dh - (screen.height() + screen.y());
-                xcb_ewmh_set_wm_strut(ewmh, panel->winId(), 0, 0, 0, bottom);
+                xcb_ewmh_set_wm_strut(&ewmh, panel->winId(), 0, 0, 0, bottom);
                 strut.bottom = bottom;
                 strut.bottom_start_x = screen.x();
                 strut.bottom_end_x = screen.x() + screen.width() - 1;
@@ -857,15 +861,15 @@ namespace Utils
             else
             {
                 int top = panel->height() + screen.y();
-                xcb_ewmh_set_wm_strut(ewmh, panel->winId(), 0, 0, top, 0);
+                xcb_ewmh_set_wm_strut(&ewmh, panel->winId(), 0, 0, top, 0);
                 strut.top = top;
                 strut.top_start_x = screen.x();
                 strut.top_end_x = screen.x() + screen.width() - 1;
             }
-            xcb_ewmh_set_wm_strut_partial(ewmh, panel->winId(), strut);
-            xcb_ewmh_set_wm_desktop(ewmh, panel->winId(), 0xFFFFFFFF);
+            xcb_ewmh_set_wm_strut_partial(&ewmh, panel->winId(), strut);
+            xcb_ewmh_set_wm_desktop(&ewmh, panel->winId(), 0xFFFFFFFF);
             xcb_flush(conn);
-            xcb_ewmh_connection_wipe(ewmh);
+            xcb_ewmh_connection_wipe(&ewmh);
 
             panel->show(); // Necessary here for borders and under\overline to work
             panel->setObjectName(name);

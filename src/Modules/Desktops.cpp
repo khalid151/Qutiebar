@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "Modules/Desktops.h"
 
 namespace Modules
@@ -110,8 +112,8 @@ namespace Modules
     Desktops::setIndicatorStyle(Indicator i, const QColor &foreground,
             const QColor &background, const QColor &lineColor, int lineWidth, Lines line)
     {
-        auto indicator = new QWidget;
-        auto props = new Utils::WidgetProperties(indicator);
+        auto indicator = std::make_unique<QWidget>();
+        auto props = std::make_unique<Utils::WidgetProperties>(indicator.get());
 
         props->setForeground(foreground);
         props->setBackground(background);
@@ -123,8 +125,6 @@ namespace Modules
             indicatorStyle = indicator->styleSheet();
         else
             inactiveStyle = indicator->styleSheet();
-
-        delete indicator;
     }
 
     void

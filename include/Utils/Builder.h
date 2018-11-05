@@ -68,8 +68,9 @@ namespace Utils
 
             QStringList generateItemsList(const QString&); // To get list of panels\groups\modules
             QStringList generateModulesList();
+            bool hasModule(const QString&);
 
-            std::unique_ptr<Modules::DisplayItem> buildDisplayItem(Utils::DataModel*, int);
+            std::unique_ptr<Modules::DisplayItem> buildDisplayItem(Utils::DataModel*);
             void buildModules();
             void buildCustomModules(const QString&); // Called inside buildModules();
             void buildGroups();

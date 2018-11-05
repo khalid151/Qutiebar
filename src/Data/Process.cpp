@@ -5,7 +5,7 @@ namespace Data
     Process::Process(QProcess *proc)
     {
         this->proc = proc;
-        QProcess::connect(proc, &QProcess::readyReadStandardOutput,
+        connect(proc, &QProcess::readyReadStandardOutput,
                 [this]() { emit update(); });
     }
 

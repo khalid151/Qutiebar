@@ -23,46 +23,48 @@ namespace Modules
     }
 
     void
-    DisplayItem::addIconDisplay(const QString &type, int w, int h, int pt)
+    DisplayItem::addIconDisplay(const QString &type, int w, int h, int pt, int p)
     {
+        if(type.isEmpty())
+            return;
         auto size = font().pointSize();
         if(type == "name") {
-            _icon = std::make_unique<Widgets::Icon>(M->getName(), size, padding, this);
+            _icon = std::make_unique<Widgets::Icon>(M->getName(), size, p, this);
             name = true;
         }
-        else if("fonticon")
-            _icon = std::make_unique<Widgets::Icon>(" ", pt, padding, this);
-        else if("pixmap")
-            _icon = std::make_unique<Widgets::Icon>(":empty.svg", w, h, padding, this);
+        else if(type == "fonticon")
+            _icon = std::make_unique<Widgets::Icon>(" ", pt, p, this);
+        else if(type == "pixmap")
+            _icon = std::make_unique<Widgets::Icon>(":empty.svg", w, h, p, this);
+        // Create an icon to be set by custom module
+        else if(type == "process")
+            _icon = std::make_unique<Widgets::Icon>(":empty.svg", w, h, p, this);
 
-        if(!type.isEmpty())
-        {
-            _icon->removeEventFilter(_icon.get()->event);
-            layoutContainer.addWidget(_icon.get());
-            update();
-        }
+        _icon->removeEventFilter(_icon.get()->event);
+        layoutContainer.addWidget(icon());
+        update();
     }
 
     void
-    DisplayItem::addDataDisplay(int r, int l)
+    DisplayItem::addDataDisplay(int r, int l, int p)
     {
         if(!r && !l)
         {
             dataType = Type::Text;
-            _data = std::make_unique<Widgets::Text>("", padding, this);
+            _data = std::make_unique<Widgets::Text>("", p, this);
             _data->setFont(font());
             _data->removeEventFilter(dynamic_cast<Widgets::Text*>(_data.get())->event);
         }
         else if(r && !l)
         {
             dataType = Type::Circle;
-            _data = std::make_unique<Widgets::Progress>(r, true, 0, this);
+            _data = std::make_unique<Widgets::Progress>(r, true, p, this);
             _data->removeEventFilter(dynamic_cast<Widgets::Progress*>(_data.get())->event);
         }
         else
         {
             dataType = Type::Line;
-            _data = std::make_unique<Widgets::Progress>(l, 0, this);
+            _data = std::make_unique<Widgets::Progress>(l, p, this);
             _data->removeEventFilter(dynamic_cast<Widgets::Progress*>(_data.get())->event);
         }
         layoutContainer.addWidget(data());

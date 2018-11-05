@@ -15,10 +15,6 @@ namespace Utils
 
     MpdConnection::~MpdConnection()
     {
-        if(status != nullptr)
-            mpd_status_free(status);
-        if(song != nullptr)
-            mpd_song_free(song);
         mpd_connection_free(conn);
     }
 
@@ -71,6 +67,7 @@ namespace Utils
         if(!checkMpdConnection())
             return MusicAdaptor::PlayerState::ERROR;
 
+        mpd_status *status = nullptr;
         mpd_command_list_begin(conn, true);
         mpd_send_status(conn);
         mpd_command_list_end(conn);
@@ -85,18 +82,22 @@ namespace Utils
         {
             case MPD_STATE_PLAY:
                 mpd_response_finish(conn);
+                mpd_status_free(status);
                 return MusicAdaptor::PlayerState::PLAYING;
                 break;
             case MPD_STATE_PAUSE:
                 mpd_response_finish(conn);
+                mpd_status_free(status);
                 return MusicAdaptor::PlayerState::PAUSED;
                 break;
             case MPD_STATE_STOP:
                 mpd_response_finish(conn);
+                mpd_status_free(status);
                 return MusicAdaptor::PlayerState::STOPPED;
                 break;
             default:
                 mpd_response_finish(conn);
+                mpd_status_free(status);
                 return MusicAdaptor::PlayerState::ERROR;
                 break;
         }
@@ -108,6 +109,7 @@ namespace Utils
         if(!checkMpdConnection())
             return 0.0f;
 
+        mpd_status *status = nullptr;
         mpd_command_list_begin(conn, true);
         mpd_send_status(conn);
         mpd_command_list_end(conn);
@@ -120,6 +122,7 @@ namespace Utils
 
         float pos = static_cast<float>(mpd_status_get_elapsed_time(status))/mpd_status_get_total_time(status);
         mpd_response_finish(conn);
+        mpd_status_free(status);
         return pos;
     }
 
@@ -135,6 +138,7 @@ namespace Utils
         if(!checkMpdConnection())
             return "";
 
+        mpd_song *song = nullptr;
         mpd_command_list_begin(conn, true);
         mpd_send_current_song(conn);
         mpd_command_list_end(conn);
@@ -154,6 +158,7 @@ namespace Utils
         str.replace("<artist>", QString::fromUtf8(artist));
         str.replace("<title>", QString::fromUtf8(title));
         str.replace("<album>", QString::fromUtf8(album));
+        mpd_song_free(song);
         return str;
     }
 
@@ -170,10 +175,6 @@ namespace Utils
             fprintf(stderr, "Could not connect to mpd.\n");
             return;
         }
-        this->host = host;
-        this->port = port;
-        this->password = password;
-        this->timeout = timeout;
         MpdConnection::isConnected = true;
     }
 
@@ -181,15 +182,7 @@ namespace Utils
     MpdConnection::checkMpdConnection()
     {
         if(mpd_connection_get_error(conn) != MPD_ERROR_SUCCESS)
-        {
-            if(isConnected)
-            {
-                isConnected = false;
-                mpd_connection_free(conn);
-                mpdConnect(host, port, password, timeout);
-            }
             return false;
-        }
         return true;
     }
 }

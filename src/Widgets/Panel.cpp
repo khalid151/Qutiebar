@@ -5,7 +5,7 @@ namespace Widgets
     Panel::Panel(const QRect &geometry, int panelWidth, int panelHeight,
             int margin, int padding) : Utils::WidgetProperties(this, false)
     {
-        event = new Utils::EventHandler;
+        event = new Utils::EventHandler(this);
         setAttribute(Qt::WA_Hover);
         installEventFilter(event);
 

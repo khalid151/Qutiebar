@@ -22,14 +22,14 @@ namespace Modules
         public:
             DisplayItem(Utils::DataModel*, int = 0);
 
-            void addIconDisplay(const QString&, int, int, int);
-            void addDataDisplay(int = 0, int = 0);
+            void addIconDisplay(const QString&, int, int, int, int = 0);
+            void addDataDisplay(int = 0, int = 0, int = 0);
 
             void setColors(const QColor&, const QColor&);
             void setIcons(const QStringList&, const QStringList& = {});
 
             // To style them in Builder
-            QWidget *icon() { return _icon.get(); }
+            Widgets::Icon *icon() { return _icon.get(); }
             QWidget *data() { return _data.get(); }
 
             Utils::EventHandler *event;

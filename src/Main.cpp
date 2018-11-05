@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 
     Utils::UnixSignalHandler sig;
     QObject::connect(&sig, &Utils::UnixSignalHandler::stop, &app, &QCoreApplication::quit);
-    QObject::connect(qApp, &QApplication::aboutToQuit, qApp, [](){ fprintf(stdout, "Exit.\n"); });
+    QObject::connect(qApp, &QApplication::aboutToQuit, qApp, [](){ printf("Got termination signal.\n"); });
 
     return app.exec();
 }
