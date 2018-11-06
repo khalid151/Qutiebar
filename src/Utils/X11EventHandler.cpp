@@ -124,6 +124,7 @@ namespace Utils
             const unsigned int value{enable? XCB_EVENT_MASK_PROPERTY_CHANGE : XCB_EVENT_MASK_NO_EVENT};
             xcb_change_window_attributes(conn, win, XCB_CW_EVENT_MASK, &value);
         }
+        xcb_flush(conn);
     }
 
     void

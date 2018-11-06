@@ -39,7 +39,6 @@ namespace Modules
             DisplayType::Type dataType;
             QColor primaryColor = Qt::black, secondaryColor = Qt::white;
             QHBoxLayout layoutContainer;
-            QString unit = "";
             QStringList primaryIcons, secondaryIcons;
             Utils::DataModel *M = nullptr;
             std::unique_ptr<Widgets::Icon> _icon;

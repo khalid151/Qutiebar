@@ -5,6 +5,7 @@
 #include <QCommandLineParser>
 #include <QIcon>
 #include <QResource>
+#include <QScreen>
 #include <QSettings>
 
 #ifdef ENABLE_DBUS
@@ -24,16 +25,24 @@ int main(int argc, char **argv)
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("A customizable panel based on Qt.");
+    parser.setApplicationDescription("A customizable panel made with Qt.");
     parser.addHelpOption();
     parser.addOptions({
             {QStringList{"c", "config"}, "Load a configuration file.", "config-file"},
+            {QStringList{"m", "list-monitors"}, "Print available monitor names and exit."},
             {QStringList{"v", "version"}, "Display version number and exit."},
             });
     parser.process(app);
 
-    if(parser.isSet("config")) configPath = parser.value("config");
+    if(parser.isSet("c")) configPath = parser.value("config");
     else configPath = Utils::Builder::defaultConfigPath();
+
+    if(parser.isSet("m"))
+    {
+        for(auto s:QGuiApplication::screens())
+            printf("%s\n", s->name().toLatin1().data());
+        return 0;
+    }
 
     if(parser.isSet("v"))
     {

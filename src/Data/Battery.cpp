@@ -34,7 +34,7 @@ namespace Data
         return -1;
     }
 
-    int
+    float
     Battery::getData()
     {
         QFile file(QString("%1/capacity").arg(battery));
@@ -43,6 +43,6 @@ namespace Data
         QTextStream in(&file);
         QString percentage = in.readAll().trimmed();
         file.close();
-        return percentage.replace("%", "").toInt();
+        return percentage.replace("%", "").toFloat();
     }
 }

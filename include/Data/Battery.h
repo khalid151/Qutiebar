@@ -14,7 +14,7 @@ namespace Data
             QString battery;
             bool hasState() { return true; }
             int getState();
-            int getData();
+            float getData();
             QString getName() { return "Battery"; }
             QString getUnit() { return "%"; }
     };

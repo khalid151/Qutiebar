@@ -175,6 +175,10 @@ namespace Utils
             fprintf(stderr, "Could not connect to mpd.\n");
             return;
         }
+        this->host = host;
+        this->port = port;
+        this->password = password;
+        this->timeout = timeout;
         MpdConnection::isConnected = true;
     }
 
@@ -182,7 +186,15 @@ namespace Utils
     MpdConnection::checkMpdConnection()
     {
         if(mpd_connection_get_error(conn) != MPD_ERROR_SUCCESS)
-            return false;
+        {
+            if(isConnected)
+            {
+                isConnected = false;
+                mpd_connection_free(conn);
+                mpdConnect(host, port, password, timeout);
+            }
+             return false;
+        }
         return true;
     }
 }

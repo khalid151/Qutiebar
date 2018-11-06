@@ -99,6 +99,10 @@ namespace Widgets
         type = Icon::TEXT;
         this->padding = padding;
 
+        event = new Utils::EventHandler;
+        setAttribute(Qt::WA_Hover);
+        installEventFilter(event);
+
         setLayout(&layoutContainer);
         layoutContainer.setContentsMargins(padding, 0, padding, 0);
 
@@ -107,7 +111,7 @@ namespace Widgets
         icon->setStyleSheet("border: none; background: none");
         resize(pointSize);
 
-        this->event = dynamic_cast<Text*>(icon.get())->event; // Already installed in Text widget
+        icon->removeEventFilter(dynamic_cast<Text*>(icon.get())->event);
     }
 
     Icon::~Icon()

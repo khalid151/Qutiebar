@@ -9,7 +9,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(MAJOR 0)
 set(MINOR 3)
-set(PATCH 2)
+set(PATCH 3)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/Version.h.in
             ${CMAKE_CURRENT_SOURCE_DIR}/include/Version.h)
@@ -63,6 +63,11 @@ endif(${Alsa_FOUND})
 if(${Qt5DBus_FOUND})
     add_definitions(-DENABLE_DBUS)
     list(APPEND Libs Qt5::DBus)
+else()
+    list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/Utils/EventHandler.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/Utils/Mpris.cpp)
+    list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/include/Utils/EventHandler.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/Utils/Mpris.h)
 endif(${Qt5DBus_FOUND})
 
 add_executable(${PROJECT_NAME} ${sources} ${headers} ${res})

@@ -3,6 +3,7 @@
 
 #include <QProcess>
 
+#include "Widgets/Icon.h"
 #include "Utils/Misc.h"
 
 namespace Data
@@ -15,16 +16,19 @@ namespace Data
             void setName(QString n) { name = n; }
             void setMax(int m) { max = m; }
             void setUnit(QString u) { unit = u; }
+            void enableCustomIcon(Widgets::Icon*);
 
         private:
-            int data = 0;
-            int max = 100;
+            bool customIcon = false;
+            float data = 0;
+            float max = 100;
             QString unit = "";
             QString name = "Process";
             QProcess *proc;
+            Widgets::Icon *icon = nullptr;
 
-            int getData();
-            int getMax() { return max; }
+            float getData();
+            float getMax() { return max; }
             QString getName() { return name; }
             QString getUnit() { return unit; }
             void setData();

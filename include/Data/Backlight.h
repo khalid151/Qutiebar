@@ -10,12 +10,12 @@ namespace Data
         public:
             Backlight(const QString&, int = 1000);
 
-            inline int getMax() { return maxBrightness; }
+            inline float getMax() { return maxBrightness; }
 
         private:
             QString backlight;
-            int maxBrightness = 100;
-            int getData();
+            float maxBrightness = 100;
+            float getData();
             QString getName() { return "Backlight"; }
             QString getUnit() { return "%"; }
     };

@@ -17,8 +17,8 @@ namespace Data
             snd_mixer_t *mixer{};
             snd_mixer_selem_id_t *selem_id{};
             snd_mixer_elem_t *elem;
-            long max{};
-            int getData(); // should return volume here
+            long max;
+            float getData(); // should return volume here
             QString getName() { return "Volume"; }
             QString getUnit() { return "%"; }
     };

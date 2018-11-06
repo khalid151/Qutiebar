@@ -29,7 +29,7 @@ namespace Data
         snd_mixer_close(mixer);
     }
 
-    int
+    float
     Volume::getData()
     {
         snd_mixer_handle_events(mixer); // To update percentage

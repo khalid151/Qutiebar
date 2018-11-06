@@ -109,29 +109,24 @@ namespace Utils
             getConfiguredColor("progress-color") : Qt::white;
         auto empty = config->contains("progress-empty-color") ?
             getConfiguredColor("progress-empty-color") : Qt::transparent;
-        auto font = config->contains("progress-font-color") ?
-            getConfiguredColor("progress-font-color") : filled;
         int width = config->value("progress-width", 2).toInt();
         if(config->contains("progress-empty-width"))
         {
             int emptyWidth = config->value("progress-empty-width").toInt();
-            p->setStyle(width, filled, empty, font, emptyWidth);
+            p->setStyle(width, filled, empty, filled, emptyWidth);
         }
         else
-            p->setStyle(width, filled, empty, font);
+            p->setStyle(width, filled, empty, filled);
 
         auto valign = config->value("progress-vertical-align", 0).toInt();
         p->setVerticalAlignment(valign);
 
+        if(config->contains("progress-font-size"))
+            p->setFontSize(config->value("progress-font-size").toInt());
+        if(config->contains("progress-font-color"))
+            p->setFontColor(getConfiguredColor("progress-font-color"));
         if(config->contains("circle-icon"))
             p->setCircleIcon(config->value("circle-icon").toString());
-
-        int size = config->value("circle-icon-size", 8).toInt();
-        p->setFontSize(size);
-
-        auto icon = config->contains("circle-icon-color") ?
-            getConfiguredColor("circle-icon-color") : filled;
-        p->setFontColor(icon);
     }
 
     void
@@ -146,9 +141,9 @@ namespace Utils
         else if(config->contains("fonts")) props->setFontFamily(config->value("fonts").toStringList());
         if(config->contains("font-size")) props->setFontSize(config->value("font-size").toInt());
 
-        if(config->contains("shadow") || config->contains("shadow-radius"))
+        if(config->contains("shadow-color") || config->contains("shadow-radius"))
         {
-            auto c = config->contains("shadow") ?
+            auto c = config->contains("shadow-color") ?
                 getConfiguredColor("shadow") : Qt::black;
             int r = config->value("shadow-radius", 5).toInt();
             int x = config->value("shadow-x", 0).toInt();
@@ -314,7 +309,10 @@ namespace Utils
         for(const auto &name:modules)
         {
             if(!hasModule(name))
+            {
+                fprintf(stderr, "Could not find %s\n", name.toLatin1().data());
                 continue; // Skip if it doesn't have the module
+            }
 
             auto type = name.left(name.indexOf("-"));
             config->beginGroup(QString("module/%1").arg(name));
@@ -605,7 +603,7 @@ namespace Utils
     void
     Builder::buildCustomModules(const QString &name)
     {
-        QStringList types{"text", "progress", "icon", "data", "script"};
+        QStringList types{"text", "icon", "data", "script"};
         for(const auto &type:types)
         {
             if(hasModule(QString("%1/%2").arg(type, name)))
@@ -649,42 +647,6 @@ namespace Utils
                     widgets.insert(std::make_pair(name, text.get()));
                     moduleList.push_back(std::move(text));
                 }
-                else if(type == "progress")
-                {
-                    std::unique_ptr<Progress> progress;
-
-                    auto readStdOut = [](auto p, auto w) {
-                        int perc = p->readAll().simplified().toInt();
-                        w->updateProgress(perc);
-                    };
-                    int percentage = config->value("starting-percentage", 0).toInt();
-
-                    if(config->contains("progress-radius"))
-                    {
-                        int r = config->value("progress-radius").toInt();
-                        bool showPercentage = config->value("show-percentage", false).toBool();
-                        progress = std::make_unique<Progress>(r, showPercentage, padding);
-                    }
-                    else if(config->contains("progress-length"))
-                    {
-                        int l = config->value("progress-length").toInt();
-                        progress = std::make_unique<Progress>(l, padding);
-                    }
-                    else
-                    {
-                        config->endGroup();
-                        continue; // Skip module if no progress is specified.
-                    }
-
-                    progress->updateProgress(percentage);
-                    events = progress->event;
-                    setProperties(progress.get());
-                    configureProgress(progress.get());
-                    QObject::connect(proc.get(), &QProcess::readyReadStandardOutput,
-                            progress.get(), std::bind(readStdOut, proc.get(), progress.get()));
-                    widgets.insert(std::make_pair(name, progress.get()));
-                    moduleList.push_back(std::move(progress));
-                }
                 else if(type == "icon")
                 {
                     auto readStdOut = [](auto p, auto w) {
@@ -704,13 +666,16 @@ namespace Utils
                 else if(type == "data")
                 {
                     auto data = std::make_unique<Data::Process>(proc.get());
-                    auto display = buildDisplayItem(data.get());
                     int max = config->value("max-value", 100).toInt();
                     auto unit = config->value("unit", "%").toString();
                     data->setMax(max);
                     data->setUnit(unit);
                     if(config->contains("name"))
                         data->setName(config->value("name").toString());
+
+                    auto display = buildDisplayItem(data.get());
+                    if(config->value("icon").toString().contains("process"))
+                        data->enableCustomIcon(display->icon());
 
                     events = display->event;
                     widgets.insert(std::make_pair(name, display.get()));

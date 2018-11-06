@@ -2,7 +2,6 @@
 #include <QTextStream>
 #include <QTimer>
 
-
 #include "Data/Backlight.h"
 
 namespace Data
@@ -14,7 +13,7 @@ namespace Data
         if(file.open(QFile::ReadOnly | QFile::Text))
         {
             QTextStream in(&file);
-            maxBrightness = in.readAll().trimmed().toInt();
+            maxBrightness = in.readAll().trimmed().toFloat();
             file.close();
         }
 
@@ -23,7 +22,7 @@ namespace Data
         timer->start(updateRate);
     }
 
-    int
+    float
     Backlight::getData()
     {
         QFile file(QString("%1/brightness").arg(backlight));
@@ -32,6 +31,6 @@ namespace Data
         QTextStream in(&file);
         QString brightness = in.readAll().trimmed();
         file.close();
-        return brightness.toInt();
+        return brightness.toFloat();
     }
 }

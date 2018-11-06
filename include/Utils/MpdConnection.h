@@ -31,7 +31,8 @@ namespace Utils
 
         private:
             bool isConnected = false;
-            QString format = "";
+            int port, timeout;
+            QString host, password, format = "";
             mpd_connection *conn;
             void mpdConnect(const QString&, int, const QString&, int);
             bool checkMpdConnection();

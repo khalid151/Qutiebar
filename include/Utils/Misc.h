@@ -40,8 +40,8 @@ namespace Utils
         public:
             virtual bool hasState() { return false; }
             virtual int getState() { return 0; }
-            virtual int getMax() { return 100; }
-            virtual int getData() = 0;
+            virtual float getMax() { return 100; }
+            virtual float getData() = 0;
             virtual QString getName() = 0;
             virtual QString getUnit() { return ""; }
 

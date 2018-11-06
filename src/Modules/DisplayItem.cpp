@@ -17,7 +17,7 @@ namespace Modules
         layoutContainer.setSpacing(0);
 
         M = m;
-        unit = M->getUnit();
+        hasState = M->hasState();
 
         connect(M, &Utils::DataModel::update, this, &DisplayItem::update);
     }
@@ -37,7 +37,9 @@ namespace Modules
         else if(type == "pixmap")
             _icon = std::make_unique<Widgets::Icon>(":empty.svg", w, h, p, this);
         // Create an icon to be set by custom module
-        else if(type == "process")
+        else if(type == "process-fonticon")
+            _icon = std::make_unique<Widgets::Icon>(" ", pt, p, this);
+        else if(type == "process-pixmap")
             _icon = std::make_unique<Widgets::Icon>(":empty.svg", w, h, p, this);
 
         _icon->removeEventFilter(_icon.get()->event);
@@ -107,12 +109,12 @@ namespace Modules
         switch(dataType)
         {
             case Type::Text:
-                if(unit == "%")
+                if(M->getUnit() == "%")
                     dynamic_cast<Widgets::Text*>(_data.get())->
-                    setText(QString::number(getPercent()).append(unit));
+                    setText(QString::number(getPercent()).append(M->getUnit()));
                 else
                     dynamic_cast<Widgets::Text*>(_data.get())->
-                    setText(QString::number(M->getData()).append(unit));
+                    setText(QString::number(M->getData()).append(M->getUnit()));
                 if(hasState)
                 {
                     if(M->getState())
