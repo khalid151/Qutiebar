@@ -36,7 +36,7 @@ namespace Modules
             std::unique_ptr<Widgets::Progress> progress;
             std::unique_ptr<Widgets::Text> displayText;
             QString oldInfo;
-            void addButtons(Widgets::Icon::IconType, bool, int, int, const QStringList&);
+            void addButtons(Widgets::IconType::IconType, bool, int, int, const QStringList&);
             void updateWidget();
     };
 }

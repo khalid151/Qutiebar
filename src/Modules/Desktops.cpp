@@ -4,7 +4,7 @@
 
 namespace Modules
 {
-    Desktops::Desktops(Type t, Widgets::Icon::IconType ic, const QStringList &desktopIcons, int padding, QWidget *parent)
+    Desktops::Desktops(Type t, Widgets::IconType::IconType ic, const QStringList &desktopIcons, int padding, QWidget *parent)
         : QWidget(parent), Utils::WidgetProperties(this)
     {
         this->padding = padding;
@@ -12,7 +12,7 @@ namespace Modules
         layoutContainer.setContentsMargins(0, 0, 0, 0);
         type = t;
         // If it's a text, defaultIcon should be empty, else, use resources.
-        ic == Widgets::Icon::TEXT ? defaultIcon = "" : defaultIcon = ":empty.svg";
+        ic == Widgets::IconType::IconType::Text ? defaultIcon = "" : defaultIcon = ":empty.svg";
         iconType = ic;
         widgetsCount = 0;
         icons = desktopIcons;
@@ -33,7 +33,7 @@ namespace Modules
                 if(createWidgets)
                 {
                     Widgets::Icon *wid;
-                    if(ic != Widgets::Icon::TEXT)
+                    if(ic != Widgets::IconType::Text)
                     {
                         wid = new Widgets::Icon(i.section(":", 1, 1).simplified(), h, w, padding, this);
                         wid->setAntialiasing(antialiasing, smoothing);
@@ -51,9 +51,8 @@ namespace Modules
         else
         {
             defaultLayout = true;
-            iconType = Widgets::Icon::TEXT;
+            iconType = Widgets::IconType::Text;
         }
-        setIndicatorStyle(Indicator::ACTIVE, Qt::white, Qt::transparent, Qt::red, 2, Lines::UNDERLINE);
     }
 
     void
@@ -118,10 +117,10 @@ namespace Modules
         props->setForeground(foreground);
         props->setBackground(background);
 
-        if(line == Lines::UNDERLINE) props->setUnderline(lineWidth, lineColor);
-        if(line == Lines::OVERLINE) props->setOverline(lineWidth, lineColor);
+        if(line == Lines::Underline) props->setUnderline(lineWidth, lineColor);
+        if(line == Lines::Overline) props->setOverline(lineWidth, lineColor);
 
-        if(i == Indicator::ACTIVE)
+        if(i == Indicator::Active)
             indicatorStyle = indicator->styleSheet();
         else
             inactiveStyle = indicator->styleSheet();
@@ -138,7 +137,7 @@ namespace Modules
                     if(!currentDesktops.contains(x))
                     {
                         Widgets::Icon *td;
-                        if(iconType != Widgets::Icon::TEXT)
+                        if(iconType != Widgets::IconType::Text)
                         {
                             td = new Widgets::Icon(defaultIcon, h, w, padding, this);
                             td->setVerticalAlignment(va);
@@ -162,7 +161,7 @@ namespace Modules
         // Displaying populated desktops:
         switch(type)
         {
-            case CURRENT:
+            case Current:
                 for(int i = 0; i < currentDesktops.size(); i++)
                 {
                     if(i == currentIndex)
@@ -181,7 +180,7 @@ namespace Modules
                 }
                 break;
 
-            case POPULATED:
+            case Populated:
                 for(int i = 0; i < currentDesktops.size(); i++)
                 {
                     auto *item = dynamic_cast<Widgets::Icon*>(layoutContainer.itemAt(i)->widget());
@@ -195,7 +194,7 @@ namespace Modules
                         if(i == index) item->load(activeIcon);
                         else item->load(defaultIcon);
                     }
-                    else if(defaultLayout && iconType == Widgets::Icon::TEXT)
+                    else if(defaultLayout && iconType == Widgets::IconType::Text)
                     {
                         item->load(currentDesktops[i]);
                     }

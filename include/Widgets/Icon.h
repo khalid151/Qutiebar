@@ -9,6 +9,11 @@
 
 namespace Widgets
 {
+    namespace IconType
+    {
+        enum IconType {Pixmap, Text};
+    }
+
     class PixIcon : public QWidget
     {
         public:
@@ -35,7 +40,6 @@ namespace Widgets
     class Icon : public QWidget, public Utils::WidgetProperties
     {
         public:
-            enum IconType {PIXMAP, TEXT};
             Icon(const QString&, int w, int h, int , QWidget* = nullptr); // For pixmap icon
             Icon(const QString&, int ps, int , QWidget* = nullptr); // For font icon
             ~Icon();

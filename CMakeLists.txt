@@ -9,7 +9,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(MAJOR 0)
 set(MINOR 3)
-set(PATCH 3)
+set(PATCH 4)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/Version.h.in
             ${CMAKE_CURRENT_SOURCE_DIR}/include/Version.h)

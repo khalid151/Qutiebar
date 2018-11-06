@@ -51,13 +51,13 @@ namespace Modules
     void
     MusicDisplay::addButtons(int s, const QStringList &l)
     {
-        addButtons(Widgets::Icon::TEXT, false, s, 0, l);
+        addButtons(Widgets::IconType::Text, false, s, 0, l);
     }
 
     void
     MusicDisplay::addButtons(int w, int h, bool aa, const QStringList &l)
     {
-        addButtons(Widgets::Icon::PIXMAP, aa, w, h, l);
+        addButtons(Widgets::IconType::Pixmap, aa, w, h, l);
     }
 
 
@@ -69,7 +69,7 @@ namespace Modules
 
     // Private
     void
-    MusicDisplay::addButtons(Widgets::Icon::IconType t, bool aa, int width, int height, const QStringList &l)
+    MusicDisplay::addButtons(Widgets::IconType::IconType t, bool aa, int width, int height, const QStringList &l)
     {
         using namespace Widgets;
         using namespace Utils;
@@ -83,12 +83,12 @@ namespace Modules
             auto icon = b.section(":", 1, 1).simplified();
 
             Icon *w;
-            if(t == Icon::TEXT)
+            if(t == IconType::Text)
                 w = new Icon(icon, width, 0, buttons.get());
             else
                 w = new Icon(icon, width, height, 0, buttons.get());
 
-            if(t == Icon::PIXMAP)
+            if(t == IconType::Pixmap)
                 w->setAntialiasing(aa, aa);
             buttonsContainer->addWidget(w);
 

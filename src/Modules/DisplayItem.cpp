@@ -52,7 +52,7 @@ namespace Modules
     {
         if(!r && !l)
         {
-            dataType = Type::Text;
+            dataType = Type::Number;
             _data = std::make_unique<Widgets::Text>("", p, this);
             _data->setFont(font());
             _data->removeEventFilter(dynamic_cast<Widgets::Text*>(_data.get())->event);
@@ -108,7 +108,7 @@ namespace Modules
         if(_data != nullptr)
         switch(dataType)
         {
-            case Type::Text:
+            case Type::Number:
                 if(M->getUnit() == "%")
                     dynamic_cast<Widgets::Text*>(_data.get())->
                     setText(QString::number(getPercent()).append(M->getUnit()));

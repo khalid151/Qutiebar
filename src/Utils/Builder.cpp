@@ -251,14 +251,14 @@ namespace Utils
         int length = config->value("progress-length", 100).toInt();
 
         auto icon = config->value("icon").toString().toLower();
-        auto data = config->value("data", "text").toString().toLower();
+        auto data = config->value("data", "number").toString().toLower();
         auto location = config->value("icon-location", "left").toString().toLower();
 
         auto icons = config->value("icons").toStringList();
         displayItem->setIcons(std::move(icons));
 
         auto addData = [radius, length, data, data_padding](auto d) {
-            if(data == "text")
+            if(data == "number")
                 d->addDataDisplay(0, 0, data_padding);
             else if(data == "circle")
                 d->addDataDisplay(radius, 0, data_padding);
@@ -376,13 +376,13 @@ namespace Utils
             else if(type == "workspace")
             {
                 useXEvents = true;
-                Widgets::Icon::IconType ic;
+                Widgets::IconType::IconType ic;
                 auto iconType = config->value("icon-type", "fonticon").toString().toLower();
-                if(iconType == "fonticon" || iconType == "text") ic = Widgets::Icon::TEXT;
-                else if(iconType == "pixmap") ic = Widgets::Icon::PIXMAP;
+                if(iconType == "fonticon" || iconType == "text") ic = Widgets::IconType::Text;
+                else if(iconType == "pixmap") ic = Widgets::IconType::Pixmap;
                 // Current -> only one workspace displayed at a time
-                auto t = config->value("current-only", false).toBool()? Modules::Desktops::CURRENT
-                    : Modules::Desktops::POPULATED;
+                auto t = config->value("current-only", false).toBool()? Modules::Desktops::Current
+                    : Modules::Desktops::Populated;
 
                 auto iconList = config->value("icons").toStringList();
                 if(config->contains("default-icon"))
@@ -392,7 +392,7 @@ namespace Utils
 
                 auto aa = config->value("antialiasing", true).toBool();
                 setProperties(desktops.get());
-                if(ic == Widgets::Icon::PIXMAP)
+                if(ic == Widgets::IconType::Pixmap)
                 {
                     desktops->resize(width, height);
                     desktops->setAntialiasing(aa, aa);
@@ -410,14 +410,14 @@ namespace Utils
 
                 if(config->contains("active-underline-color")) {
                     line = getConfiguredColor("active-underline-color");
-                    l= Modules::Desktops::UNDERLINE;
+                    l= Modules::Desktops::Underline;
                 } else if(config->contains("active-overline-color")) {
                     line = getConfiguredColor("active-overline-color");
-                    l= Modules::Desktops::OVERLINE;
+                    l= Modules::Desktops::Overline;
                 } else
-                    l= Modules::Desktops::NONE;
+                    l= Modules::Desktops::None;
 
-                desktops->setIndicatorStyle(Modules::Desktops::ACTIVE,
+                desktops->setIndicatorStyle(Modules::Desktops::Active,
                         std::move(foreground), std::move(background),
                         std::move(line), config->value("active-line-width", 0).toInt(), l);
 
@@ -428,17 +428,17 @@ namespace Utils
 
                 if(config->contains("inactive-underline-color")) {
                     line = getConfiguredColor("inactive-underline-color");
-                    l= Modules::Desktops::UNDERLINE;
+                    l= Modules::Desktops::Underline;
                 } else if(config->contains("inactive-overline-color")) {
                     line = getConfiguredColor("inactive-overline-color");
-                    l= Modules::Desktops::OVERLINE;
+                    l= Modules::Desktops::Overline;
                 } else
-                    l= Modules::Desktops::NONE;
+                    l= Modules::Desktops::None;
 
                 if(config->contains("font-size"))
                     desktops->resize(config->value("font-size").toInt());
 
-                desktops->setIndicatorStyle(Modules::Desktops::INACTIVE,
+                desktops->setIndicatorStyle(Modules::Desktops::Inactive,
                         std::move(foreground), std::move(background),
                         std::move(line), config->value("inactive-line-width", 0).toInt(), l);
 

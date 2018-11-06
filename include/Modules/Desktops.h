@@ -10,11 +10,11 @@ namespace Modules
     class Desktops : public QWidget, public Utils::WidgetProperties
     {
         public:
-            enum Type{CURRENT, POPULATED};
-            enum Lines{NONE = 0, UNDERLINE = 1 << 0, OVERLINE = 1 << 1};
-            enum Indicator{ACTIVE, INACTIVE};
+            enum Type{Current, Populated};
+            enum Lines{None, Underline, Overline};
+            enum Indicator{Active, Inactive};
 
-            Desktops(Type, Widgets::Icon::IconType, const QStringList&, int = 0, QWidget* = nullptr);
+            Desktops(Type, Widgets::IconType::IconType, const QStringList&, int = 0, QWidget* = nullptr);
 
             void setSpacing(int);
             void setAntialiasing(bool, bool = false);
@@ -27,7 +27,7 @@ namespace Modules
             bool activeIconType = false; // When only active and inactive icons are set: - x - - (where: x is active, - is inactive)
             bool defaultLayout = false;
             bool antialiasing = true, smoothing = true;
-            Widgets::Icon::IconType iconType;
+            Widgets::IconType::IconType iconType;
             unsigned char type;
             int currentIndex, widgetsCount, padding;
             int h = 25, w = 25, pt = 10, va = 0;

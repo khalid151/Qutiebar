@@ -77,7 +77,7 @@ namespace Widgets
     Icon::Icon(const QString &location, int w, int h, int padding, QWidget *parent)
         : QWidget(parent), Utils::WidgetProperties(this)
     {
-        type = Icon::PIXMAP;
+        type = IconType::Pixmap;
         this->padding = padding;
 
         event = new Utils::EventHandler;
@@ -96,7 +96,7 @@ namespace Widgets
     Icon::Icon(const QString &icn, int pointSize, int padding, QWidget *parent)
         : QWidget(parent), WidgetProperties(this)
     {
-        type = Icon::TEXT;
+        type = IconType::Text;
         this->padding = padding;
 
         event = new Utils::EventHandler;
@@ -133,10 +133,10 @@ namespace Widgets
     {
         switch(type)
         {
-            case PIXMAP:
+            case IconType::Pixmap:
                 dynamic_cast<PixIcon*>(icon.get())->load(newIcon);
                 break;
-            case TEXT:
+            case IconType::Text:
                 dynamic_cast<Text*>(icon.get())->setText(newIcon);
                 break;
         }

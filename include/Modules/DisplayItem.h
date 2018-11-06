@@ -14,7 +14,7 @@ namespace Modules
 {
     namespace DisplayType
     {
-        enum Type{Text, Circle, Line};
+        enum Type{Number, Circle, Line};
     }
 
     class DisplayItem : public QWidget, public Utils::WidgetProperties
