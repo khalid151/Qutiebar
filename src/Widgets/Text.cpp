@@ -35,7 +35,7 @@ namespace Widgets
         // Setting max length will enable text scrolling
         maxLengthSet = true;
         maxLength = length;
-        bool richText = textFormat() == Qt::PlainText;
+        bool richText = textFormat() != Qt::PlainText;
         textScroller = new Utils::Scroller(richText, this);
         textScroller->setScrollSpeed(scrollSpeed);
         QString width;

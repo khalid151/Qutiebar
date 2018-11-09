@@ -19,31 +19,26 @@ namespace Modules
         updateWidget();
     }
 
-    Widgets::Progress*
-    MusicDisplay::getProgress()
-    {
-        return progress.get();
-    }
-
     void
     MusicDisplay::addProgress(int length, int width, int valign, const QColor &color)
     {
         showProgress = true;
-        progress = std::make_unique<Widgets::Progress>(length, 0, this);
-        progress->setStyle(width, color, Qt::black);
-        progress->setVerticalAlignment(valign);
-        layoutContainer.addWidget(progress.get());
+        _progress = std::make_unique<Widgets::Progress>(length, 0, this);
+        _progress->setStyle(width, color, Qt::black);
+        _progress->setVerticalAlignment(valign);
+        layoutContainer.addWidget(_progress.get());
     }
 
     void
-    MusicDisplay::addText(const QString& f, int width, int padding)
+    MusicDisplay::addText(const QString& f, int width, float speed, int padding, bool rt)
     {
         showText = true;
         displayText = std::make_unique<Widgets::Text>("", padding, this);
+        if(rt) displayText->enableRichText();
         layoutContainer.addWidget(displayText.get());
         if(width != 0)
         {
-            displayText->setMaxLength(width);
+            displayText->setMaxLength(width, speed);
         }
         adaptor->setSongInfoFormat(f);
     }
@@ -60,23 +55,16 @@ namespace Modules
         addButtons(Widgets::IconType::Pixmap, aa, w, h, l);
     }
 
-
-    QWidget*
-    MusicDisplay::getButtons()
-    {
-        return buttons.get();
-    }
-
     // Private
     void
     MusicDisplay::addButtons(Widgets::IconType::IconType t, bool aa, int width, int height, const QStringList &l)
     {
         using namespace Widgets;
         using namespace Utils;
-        buttons = std::make_unique<QWidget>(this);
-        buttonsContainer = std::make_unique<QHBoxLayout>(buttons.get());
+        _buttons = std::make_unique<QWidget>(this);
+        buttonsContainer = std::make_unique<QHBoxLayout>(_buttons.get());
         buttonsContainer->setContentsMargins(0, 0, 0, 0);
-        layoutContainer.addWidget(buttons.get());
+        layoutContainer.addWidget(_buttons.get());
         for(const auto &b:l)
         {
             auto button = b.section(":", 0, 0).simplified();
@@ -84,9 +72,9 @@ namespace Modules
 
             Icon *w;
             if(t == IconType::Text)
-                w = new Icon(icon, width, 0, buttons.get());
+                w = new Icon(icon, width, 0, _buttons.get());
             else
-                w = new Icon(icon, width, height, 0, buttons.get());
+                w = new Icon(icon, width, height, 0, _buttons.get());
 
             if(t == IconType::Pixmap)
                 w->setAntialiasing(aa, aa);
@@ -129,7 +117,7 @@ namespace Modules
         if(showProgress)
         {
             float pos = adaptor->getSongTimePercentage();
-            progress->updateProgress(static_cast<int>(pos * 100));
+            _progress->updateProgress(static_cast<int>(pos * 100));
         }
 
         if(showText && adaptor->getState() != Utils::MusicAdaptor::PAUSED)
@@ -140,7 +128,6 @@ namespace Modules
             if(oldInfo != currentInfo )
             {
                 oldInfo = currentInfo;
-                displayText->setText(currentInfo); // to force it change text then update for scrolling
                 displayText->updateText(currentInfo);
             }
         }

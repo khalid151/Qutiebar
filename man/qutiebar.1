@@ -1,0 +1,700 @@
+.TH Qutiebar 1 2018-11-09 "Qutiebar 0.3.4" "Qutiebar Manual"
+.SH NAME
+Qutiebar \- A customizable panel.
+.SH SYNOPSIS
+.B
+qutiebar
+.OP --help
+.OP --config\fP=\fIfile\fP
+.OP --list-monitors
+.OP --version
+.SH DESCRIPTION
+Qutiebar is a customizable panel made with Qt.
+.SH OPTIONS
+.TP
+\fB\-h\fP, \fB\-\-help\fP
+Display help and exit.
+.TP
+\fB\-c\fP \fIfile\fP, \fB\-\-config\fP=\fIfile\fP
+Specify a configuration file to load. If not specified, Qutiebar loads
+.br
+\fB$XDG_CONFIG_HOME/Qutiebar/config\fP or
+.br
+\fB$HOME/.config/Qutiebar/config\fP
+.TP
+\fB\-m\fP, \fB\-\-list-monitors\fP
+Print available monitors and exit.
+.TP
+\fB\-v\fP, \fB\-\-version\fP
+Display version number and exit.
+
+.SH CONFIGURATION
+Configuration uses INI format. \c
+This section contains information about how to configure modules\\panels.
+
+.SS Table of contents
+ \fI1. Properties Overview\fP
+    1.1 Data Types
+    1.2 General Properties
+    1.3 Progress Properties
+    1.4 Data Display Properties
+ \fI2. Panel\fP
+ \fI3. Modules\fP
+    3.1 Group
+    3.2 Battery
+    3.3 Backlight
+    3.4 Volume
+    3.5 Music Modules
+        3.5.1 MPD
+        3.5.2 Mpris
+    3.6 AppIcon
+    3.7 Clock
+    3.8 Title
+    3.9 Workspace
+    3.10 Custom Modules
+        3.10.1 Icon
+        3.10.2 Text
+        3.10.4 Data
+
+.SH 1. Properties Overview
+There is a number of properties that is shared by multiple modules. \c
+They can be grouped into three types: general properties, progress properties \c
+and data display properties.
+
+.SS 1.1 Data Types
+This is a brief description of data types that will be used to describe values.
+.TP
+\fBbool\fP
+True or false.
+.TP
+\fBint\fP
+A decimal number.
+.TP
+\fBfloat\fP
+Floating point number.
+.TP
+\fBstring\fP
+A string.
+.TP
+\fBcolor\fP
+A named color, hex color with \fI#RRGGBB\fP\\\fI#AARRGGBB\fP format or
+\fIrgba(rrr, ggg, bbb, a).\fP
+.br
+Example: \fIrgba(80, 180, 200, 0.8)\fP
+.TP
+\fBlist\fP
+Values separated by a comma.
+.br
+Example: \fIvolume, backlight, battery\fP
+
+.SS 1.2 General Properties
+These can be applied to all modules.
+.TP
+\fBbackground\fP = \fIcolor\fP
+Set background color.
+.TP
+\fBforeground\fP = \fIcolor\fP
+Set text color.
+.TP
+\fBfont\fP = \fIstring\fP
+Set a font to use.
+.TP
+\fBfonts\fP = \fIlist\fP
+Use the first font in the list. The rest will be used as a fallback.
+.TP
+\fBshadow-color\fP = \fIcolor\fP
+Set shadow color. Default: \fIblack\fP
+.TP
+\fBshadow-radius\fP = \fIint\fP
+Set shadow radius. Default: \fI5\fP
+.TP
+\fBshadow-x\fP = \fIint\fP
+Shadow X offset. Default: \fI0\fP
+.TP
+\fBshadow-y\fP = \fIint\fP
+Shadow Y offset. Default: \fI0\fP
+.TP
+\fBunderline\fP = \fIint\fP
+Set underline width.
+.TP
+\fBunderline-color\fP = \fIcolor\fP
+Set underline color. Default: \fIred\fP
+.TP
+\fBoverline\fP = \fIint\fP
+Set overline width.
+.TP
+\fBoverline-color\fP = \fIcolor\fP
+Set overline color. Default: \fIred\fP
+.TP
+\fBvertical-align\fP = \fIint\fP
+Set vertical alignment. It can be positive to displace the module upwards \c
+or negative to displace it downwards.
+
+.SS 1.3 Progress Properties
+These apply to any progress element found in any module.
+.TP
+\fBprogress-color\fP = \fIcolor\fP
+Set filled area color.
+.TP
+\fBprogress-empty-color\fP = \fIcolor\fP
+Set empty area color.
+.TP
+\fBprogress-width\fP = \fIint\fP
+Set filled area width.
+.TP
+\fBprogress-empty-width\fP = \fIint\fP
+Set empty area width.
+.TP
+\fBprogress-font-size\fP = \fIint\fP
+Set font size for text or icon.
+.TP
+\fBprogress-font-color\fP = \fIcolor\fP
+Set color for text or icon.
+.TP
+\fBprogress-vertical-align\fP = \fIint\fP
+Set vertical alignment of progress.
+.TP
+\fBcircle-icon\fP = \fIstring\fP
+Set a font icon to be drawn inside circle progress.
+
+.SS 1.4 Data Display Properties
+These are properties for a group of modules that display a text, circle \c
+progress or a line progress along with an optional icon that can be either \c
+the name of module, a pixmap icon or a font icon.
+.TP
+\fBicon\fP = \fIstring\fP
+Set icon type. Types:
+.br
+\fIname\fP -
+Display name of module.
+.br
+\fIfonticon\fP -
+Use a font glyph icon.
+.br
+\fIpixmap\fP -
+Use a pixmap. It can be a path or a named icon from an icon theme.
+.br
+\fIprocess-fonticon\fP -
+This is a special value for custom data module.
+.br
+\fIprocess-pixmap\fP -
+This is a special value for custom data module.
+.TP
+\fBicon-width\fP = \fIint\fP
+Set pixmap icon width.
+.TP
+\fBicon-height\fP = \fIint\fP
+Set pixmap icon height.
+.TP
+\fBicon-size\fP = \fIint\fP
+Set font icon size.
+.TP
+\fBicon-padding\fP = \fIint\fP
+Set icon padding.
+.TP
+\fBicon-background\fP = \fIcolor\fP
+Set icon color.
+.TP
+\fBicon-color\fP = \fIcolor\fP
+Set font icon color.
+.TP
+\fBicons\fP = \fIlist\fP
+A list of icons to display. Can be a list of paths, named icons or font icons \c
+separated by a comma.
+.TP
+\fBdata\fP = \fIstring\fP
+Set data display format. Default: \fInumber\fP. Values:
+.br
+\fInumber\fP -
+Data is displayed as a number.
+.br
+\fIcircle\fP -
+Data is displayed as a circular progress.
+.br
+\fIline\fP -
+Data is displayed as a line progress.
+.TP
+\fBprogress-radius\fP = \fIint\fP
+Set circle progress radius. Default: \fI20\fP
+.TP
+\fBprogress-length\fP = \fIint\fP
+Set line progress length. Default: \fI100\fP
+
+.SH 2. Panel
+A single configuration file can have multiple panels and all of them will be \c
+shown once the configuration file is loaded.
+.SS Section
+[\fBpanel\fP/\fIname\fP]
+.SS Properties
+.TP
+\fBwidth\fP = \fIint\fP, \fIn%\fP
+Width of panel. Default: \fI100%\fP
+.TP
+\fBheight\fP = \fIint\fP, \fIn%\fP
+Height of panel. Default: \fI4%\fP
+.TP
+\fBpadding\fP = \fIint\fP
+Space between modules and panel on left and right side.
+.TP
+\fBmargins\fP = \fIint\fP
+Space between panel and screen.
+.TP
+\fBinner-margins\fP = \fIint\fP
+Space between modules and panel on all sides.
+.TP
+\fBbottom\fP = \fIbool\fP
+Set panel location. Default: \fIfalse\fP
+.TP
+\fBover-windows\fP = \fIbool\fP
+Allow windows to be drawn over panel. Default: \fItrue\fP
+.TP
+\fBtexture\fP = \fIstring\fP
+Set path to a pixmap to use as a background. Does not work if \fIbackground\fP \c
+is set.
+.TP
+\fBmonitor\fP = \fIstring\fP
+Specify monitor to use. Defaults to first monitor.
+.br
+Use \fI$ qutiebar -m\fP to list available monitors.
+.TP
+\fBspacing-left\fP = \fIint\fP
+Space between modules on the left side.
+.TP
+\fBspacing-center\fP = \fIint\fP
+Space between modules in center.
+.TP
+\fBspacing-right\fP = \fIint\fP
+Space between modules on the right side.
+.TP
+\fBmodules-left\fP = \fIlist\fP
+A list of module names to use.
+.TP
+\fBmodules-center\fP = \fIlist\fP
+A list of module names to use.
+.TP
+\fBmodules-right\fP = \fIlist\fP
+A list of module names to use.
+
+.SH 3. Modules
+.SS 3.1 Group
+Group is a special type of modules used to “group” multiple modules together \c
+so they would share the same properties (like same background, font, etc).
+.SS Section
+[\fBgroup\fP/\fIname\fP]
+.SS Properties
+.TP
+\fBinner-margins\fP = \fIint\fP
+Space between group and modules from all sides.
+.TP
+\fBmodules\fP = \fIlist\fP
+A list of module names to use.
+.TP
+\fBspacing\fP = \fIint\fP
+Space between modules.
+
+.SS 3.2 Battery
+Battery is a \fIdata display\fP module. Data is provided by \fI/sys/class/power_supply/\fP.
+.SS Section
+[\fBmodule/battery\fP]
+.SS Properties
+.TP
+\fBbattery\fP = \fIstring\fP
+Set battery to use. Default: \fIBAT0\fP
+.TP
+\fBupdate-rate\fP = \fIfloat\fP
+Seconds it takes for module to update. Default: \fI1\fP
+
+.SS 3.3 Backlight
+Backlight is a \fIdata display\fP module. Data is provided by \fI/sys/class/backlight/\fP.
+.SS Section
+[\fBmodule/backlight\fP]
+.SS Properties
+.TP
+\fBbacklight\fP = \fIstring\fP
+Set card to use. Default: \fIintel_backlight\fP
+.TP
+\fBupdate-rate\fP = \fIfloat\fP
+Seconds it takes for module to update. Default: \fI1\fP
+
+.SS 3.4 Volume
+Volume is \fIdata display\fP module. Currently, only ALSA is supported.
+.SS Section
+[\fBmodule/volume\fP]
+.SS Properties
+.TP
+\fBmixer\fP = \fIstring\fP
+Specify mixer. Default: \fIMaster\fP
+.TP
+\fBsoundcard\fP = \fIstring\fP
+Specify sound card. Default: \fIdefault\fP
+.TP
+\fBupdate-rate\fP = \fIfloat\fP
+Seconds it takes for module to update. Default: \fI1\fP
+
+.SS 3.5 Music Modules
+\fIMPD\fP and \fImpris\fP are supported. These modules provide music controls, \c
+progress and track info (artist, title and album).
+.SS Shared properties
+.TP
+\fBadd-buttons\fP = \fIlist\fP
+Specify buttons to add as \fIbutton\fP:\fIicon\fP pairs. Available buttons:
+.br
+\fIplay\fP
+.br
+\fIpause\fP
+.br
+\fIstop\fP
+.br
+\fItoggle\fP -
+This button can have to icons set for play and pause. Example:
+\fBtoggle\fP:\fIplay_icon\fP:\fIpause_icon\fP
+.br
+\fInext\fP
+.br
+\fIprevious\fP
+.TP
+\fBbutton-type\fP = \fIstring\fP
+Specify button type. Types:
+.br
+\fIfonticon\fP
+.br
+\fIpixmap\fP
+.br
+\fItext\fP
+.TP
+\fBbutton-color\fP = \fIcolor\fP
+Set fonticon\\text color.
+.TP
+\fBbutton-background\fP = \fIcolor\fP
+Set background color for buttons.
+.TP
+\fBbutton-width\fP = \fIint\fP
+Set button width. Default: \fI20\fP
+.TP
+\fBbutton-height\fP = \fIint\fP
+Set button height. Default: \fI20\fP
+.TP
+\fBbutton-size\fP = \fIint\fP
+Set fonticon\\text size. Default: \fI10\fP
+.TP
+\fBtext-format\fP = \fIstring\fP
+Specify how text is displayed. Available modifiers are \fI<artist>\fP, \fI<album>\fP \c
+and \fI<title>\fP. These will be substituted with the corresponding data.
+.TP
+\fBtext-max-length\fP = \fIint\fP
+Set maximum length f text.
+.TP
+\fBrich-text\fP = \fIbool\fP
+Enable rich-text formatting for music information.
+.TP
+\fBscroll-speed\fP = \fIfloat\fP
+Number of seconds it takes to update scrolling text.
+.TP
+\fBadd-progress\fP = \fIbool\fP
+Add song progress.
+.TP
+\fBorder\fP = \fIlist\fP
+A list that defines how items are ordered. Default: \fItext, buttons, progress\fP
+.TP
+\fBupdate-rate\fP = \fIfloat\fP
+Seconds it takes for module to update. Default: \fI1\fP
+
+.SS 3.5.1 MPD
+.SS Section
+.TP
+[\fBmodule/mpd\fP]
+.SS Properties
+.TP
+\fBhost\fP = \fIstring\fP
+Set host. Default: \fIlocalhost\fP
+.TP
+\fBport\fP = \fIint\fP
+Set port number. Default: \fI6600\fP
+.TP
+\fBpassword\fP = \fIstring\fP
+Set password.
+.TP
+\fBtimeout\fP = \fIint\fP
+Set connection timeout. Default: \fI1000\fP
+
+.SS 3.5.2 Mpris
+.SS Section
+.TP
+[\fBmodule/mpris\fP]
+.SS Properties
+.TP
+\fBmusic-player\fP = \fIstring\fP
+Set music player. To get music player name, use:
+.br
+\fI$ qdbus | grep mpris | sed -r "s/(\\w+\\.)+//"\fP
+
+.SS 3.6 AppIcon
+This module displays an icon of the currently focused window.
+This works for windows that have \fI_NET_WM_ICON\fP atom set.
+If that atom is not set, \fIdefault-icon\fP will be used instead.
+.SS Section
+.TP
+[\fBmodule/appicon\fI]
+.SS Properties
+.TP
+\fBwidth\fP = \fIint\fP
+Set icon width. Default: \fI20\fP
+.TP
+\fBheight\fP = \fIint\fP
+Set icon height. Default: \fI20\fP
+.TP
+\fBdefault-icon\fP = \fIstring\fP
+Set an icon in case there are not icons set for the window.
+It can be a path to pixmap or a named icon from an icon theme.
+
+.SS 3.7 Clock
+Used to display date and time. An alternative layout can be set and accessed \c
+through clicking on the module.
+.SS Formatting
+.TP
+\fIh\fP
+Hour without a leading zero (12H if A\a is used)
+.TP
+\fIhh\fP
+Hour with a leading zero (12H if A\a is used)
+.TP
+\fIH\fP
+Hour without a leading zero (24H)
+.TP
+\fIHH\fP
+Hour with a leading zero (24H)
+.TP
+\fIm\fP
+Minute without a leading zero
+.TP
+\fImm\fP
+Minute with a leading zero
+.TP
+\fIs\fP
+Seconds without a leading zero
+.TP
+\fIss\fP
+Seconds with a leading zero
+.TP
+\fIA\fP, \fIAP\fP
+AM\\PM display
+.TP
+\fIa\fP, \fIap\fP
+am\\pm display
+.TP
+\fId\fP
+Day number without a leading zero
+.TP
+\fIdd\fP
+Day number with a leading zero
+.TP
+\fIddd\fP
+Abbreviation of day name
+.TP
+\fIdddd\fP
+Full day name
+.TP
+\fIM\fP
+Month number without a leading zero
+.TP
+\fIMM\fP
+Month number with a leading zero
+.TP
+\fIMMM\fP
+Abbreviation of month name
+.TP
+\fIMMMM\fP
+Full month name
+.TP
+\fIyy\fP
+Year as two digits
+.TP
+\fIyyyy\fP
+Year as four digits
+.SS Timezone formatting
+.TP
+\fIUTC+\\-dd:dd\fP
+Example: \fIUTC+03:00\fP
+.TP
+\fIIANA timezone ID\fP
+Example: \fIAsia/Baghdad\fP
+.SS Section
+.TP
+[\fBmodule/clock\fP]
+.SS Properties
+.TP
+\fBformat\fP = \fIstring\fP
+Set date\\time display format. Default: \fIhh:mm a\fP
+.TP
+\fBalt-format\fP = \fIstring\fP
+Set alternative display format.
+.TP
+\fBtime-zone\fP = \fIstring\fP
+Set a timezone.
+.TP
+\fBupdate-rate\fP = \fIfloat\fP
+Seconds it takes for module to update. Default: \fI1\fP
+
+.SS 3.8 Title
+Display title of the currently focused window.
+.SS Section
+[\fBmodule/title\fP]
+.SS Properties
+.TP
+\fBclass\fP = \fIbool\fP
+Display window class instead of title. Default: \fIfalse\fP
+.TP
+\fBmax-length\fP = \fIint\fP
+Set maximum length of title.
+.TP
+\fBscroll-speed\fP = \fIfloat\fP
+Number of seconds it takes to update scrolling text.
+
+.SS 3.9 Workspace
+.SS Section
+[\fBmodue/workspace\fP]
+.SS Properties
+.TP
+\fBwidth\fP = \fIint\fP
+Set icon width. Default: \fI20\fP
+.TP
+\fBheight\fP = \fIint\fP
+Set icon height. Default: \fI20\fP
+.TP
+\fBicon-type\fP = \fIstring\fP
+Set icon type. Types:
+.br
+\fItext\fP -
+Display text for current workspce.
+.br
+\fIfonticon\fP -
+Use a font glyph icon.
+.br
+\fIpixmap\fP -
+Use a pixmap. It can be a path or a named icon from an icon theme.
+.TP
+\fBicons\fP = \fIlist\fP
+Set a list of \fIworkspace\fP:\fIicon\fP pairs. It can also be \fIactive\fP:\fIicon, \fP
+\fIinactive\fP:\fIicon\fP where \fIactive\fP will represent the currently-focused workspace
+and the rest of icons will be set as \fIinactive\fP.
+.TP
+\fBdefault-icon\fP = \fIstring\fP
+Set an icon for the rest of workspaces.
+.TP
+\fBspacing\fP = \fIint\fP
+Set space between each workspace. Default: \fI5\fP
+.TP
+\fBactive-color\fP = \fIcolor\fP
+Set workspce color.
+.TP
+\fBactive-background\fP = \fIcolor\fP
+Set workspce background.
+.TP
+\fBactive-underline-color\fP = \fIcolor\fP
+Set underline color.
+.TP
+\fBactive-overline-color\fP = \fIcolor\fP
+Set overline color.
+.TP
+\fBactive-line-width\fP = \fIint\fP
+Set underline\\overline width.
+.TP
+\fBinactive-color\fP = \fIcolor\fP
+Set inactive workspce color.
+.TP
+\fBinactive-background\fP = \fIcolor\fP
+Set inactive workspce background.
+.TP
+\fBinactive-underline-color\fP = \fIcolor\fP
+Set inactive underline color.
+.TP
+\fBinactive-overline-color\fP = \fIcolor\fP
+Set inactive overline color.
+.TP
+\fBinactive-line-width\fP = \fIint\fP
+Set underline\\overline width.
+
+.SS 3.10 Custom Modules
+These are modules that use the standard output of an external process to display
+different information.
+.SS Shared Properties
+.TP
+\fBexec\fP = \fIstring\fP
+A path to executable\\script.
+.TP
+\fBexec-on-click\fP = \fIstring\fP
+Process won't start unless the module is clicked.
+.TP
+\fBone-shot\fP = \fIbool\fP
+The process will run only once. Useful if it is an infinite loop. Default \fItrue\fP
+.TP
+\fBupdate-rate\fP = \fIfloat\fP
+Seconds it takes to run the process again. Default: \fI1\fP
+
+.SS 3.10.1 Icon
+This module uses the process output to set an icon. This means the process has \c
+to output a path to pixmap or a named icon.
+.SS Section
+.TP
+[\fBicon\fP/\fIname\fP]
+.SS Properties
+.TP
+\fBwidth\fP = \fIint\fP
+Set icon width. Default: \fI25\fP
+.TP
+\fBheight\fP = \fIint\fP
+Set icon height. Default: \fI25\fP
+.TP
+\fBdefault-icon\fP = \fIstring\fP
+Set a starting icon.
+
+.SS 3.10.2 Text
+This custom module takes the output of a process and displays it as a text.
+.SS Section
+.TP
+[\fBtext\fP/\fIname\fP]
+.SS Properties
+.TP
+\fBlabel\fP = \fIstring\fP
+Set default text.
+.TP
+\fBmax-length\fP = \fIint\fP
+Set text maximum length.
+.TP
+\fBscroll-speed\fP = \fIint\fP
+Number of seconds it takes to update scrolling text. Default: \fI0.25\fP
+.TP
+\fBrich-text\fP = \fIbool\fP
+Enable rich-text. Default: \fIfalse\fP
+
+.SS 3.10.3 Data
+This is a custom \fIdata display\fP module.
+In order to set value, icon and unit, the process has to output data as:
+.br
+\fBi\fP:\fIicon\fP
+.br
+\fBm\fP:\fImaximum_value\fP
+.br
+\fBu\fP:\fIunit\fP
+.br
+\fBv\fP:\fIvalue\fP
+.br
+And they \fImust\fP end with a new line character \fP\\n\fP.
+.SS Section
+.TP
+[\fBdata\fP/\fIname\fP]
+.SS Properties
+.TP
+\fBname\fP = \fIstring\fP
+Set module name. Default: \fIProcess\fP
+.TP
+\fBmax-value\fP = \fIint\fP
+Set maximum value. Default: \fI100\fP
+.TP
+\fBunit\fP = \fIstring\fP
+Set data unit. Default: \fI%\fP
+
+.SH SEE ALSO
+Visit <https://github.com/khalid151/Qutiebar> for configuration examples.
+.SH AUTHOR
+Khalid J.

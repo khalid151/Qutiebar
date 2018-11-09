@@ -144,7 +144,7 @@ namespace Utils
         if(config->contains("shadow-color") || config->contains("shadow-radius"))
         {
             auto c = config->contains("shadow-color") ?
-                getConfiguredColor("shadow") : Qt::black;
+                getConfiguredColor("shadow-color") : Qt::black;
             int r = config->value("shadow-radius", 5).toInt();
             int x = config->value("shadow-x", 0).toInt();
             int y = config->value("shadow-y", 0).toInt();
@@ -346,15 +346,15 @@ namespace Utils
                         &Utils::X11EventHandler::classChanged : &Utils::X11EventHandler::titleChanged,
                         title.get(), &Widgets::Text::updateText);
 
+                if(config->value("rich-text", false).toBool())
+                    title->enableRichText();
+
                 if(config->contains("max-length"))
                 {
                     int maxlen = config->value("max-length").toInt();
                     float speed = config->value("scroll-speed", 0.25).toFloat();
                     title->setMaxLength(maxlen, speed);
                 }
-
-                if(config->value("rich-text", false).toBool())
-                    title->enableRichText();
 
                 widgets.insert(std::make_pair(name, title.get()));
                 moduleList.push_back(std::move(title));
@@ -403,8 +403,8 @@ namespace Utils
                 // Setting indicators
                 Modules::Desktops::Lines l;
                 QColor foreground = Qt::white, background = Qt::transparent, line = Qt::red;
-                if(config->contains("active-foreground"))
-                    foreground = getConfiguredColor("active-foreground");
+                if(config->contains("active-color"))
+                    foreground = getConfiguredColor("active-color");
                 if(config->contains("active-background"))
                     background = getConfiguredColor("active-background");
 
@@ -421,8 +421,8 @@ namespace Utils
                         std::move(foreground), std::move(background),
                         std::move(line), config->value("active-line-width", 0).toInt(), l);
 
-                foreground = config->contains("inactive-foreground") ?
-                    getConfiguredColor("inactive-foreground") : foreground;
+                foreground = config->contains("inactive-color") ?
+                    getConfiguredColor("inactive-color") : foreground;
                 background = config->contains("inactive-background") ?
                     getConfiguredColor("inactive-background") : Qt::transparent;
 
@@ -548,9 +548,13 @@ namespace Utils
                 auto buttons = config->value("add-buttons").toStringList();
                 auto textFmt = config->value("text-format").toString();
                 auto maxlen = config->value("text-max-length", 0).toInt();
-                auto len = config->value("progress-length", 20).toInt();
+                auto len = config->value("progress-length", 100).toInt();
                 auto valign = config->value("progress-vertical-align", 0).toInt();
-                auto iconSize = config->value("icon-size", 10).toInt();
+                int width = config->value("button-width", 20).toInt();
+                int height = config->value("button-height", 20).toInt();
+                int iconSize = config->value("button-size", 10).toInt();
+                bool richText = config->value("rich-text", false).toBool();
+                float speed = config->value("scroll-speed", 0.25).toFloat();
 
                 QStringList defaultOrder{"text", "buttons", "progress"};
                 auto order = config->value("order", defaultOrder).toStringList();
@@ -559,7 +563,7 @@ namespace Utils
                     if(o == "text")
                     {
                         if(config->contains("text-format"))
-                        music->addText(textFmt, maxlen, padding);
+                        music->addText(textFmt, maxlen, speed, padding, richText);
                     }
                     else if(o == "buttons")
                     {
@@ -571,7 +575,7 @@ namespace Utils
                                 music->addButtons(width, height, aa, buttons);
                             else if(type == "fonticon" || type == "text")
                                 music->addButtons(iconSize, buttons);
-                            auto props = std::make_unique<Utils::WidgetProperties>(music->getButtons());
+                            auto props = std::make_unique<Utils::WidgetProperties>(music->buttons());
                             if(config->contains("button-color"))
                                 props->setForeground(getConfiguredColor("button-color"));
                             if(config->contains("button-background"))
@@ -583,7 +587,7 @@ namespace Utils
                         if(config->value("add-progress", false).toBool())
                         {
                             music->addProgress(len, 2, valign);
-                            configureProgress(music->getProgress());
+                            configureProgress(music->progress());
                         }
                     }
                 }

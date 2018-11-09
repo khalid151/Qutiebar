@@ -9,7 +9,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(MAJOR 0)
 set(MINOR 3)
-set(PATCH 4)
+set(PATCH 5)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/Version.h.in
             ${CMAKE_CURRENT_SOURCE_DIR}/include/Version.h)
@@ -22,6 +22,7 @@ file(GLOB_RECURSE all_sources src/*.cpp)
 file(GLOB_RECURSE all_headers include/*.h)
 set(sources ${all_sources})
 set(headers ${all_headers})
+set(man_page ${CMAKE_CURRENT_SOURCE_DIR}/man/qutiebar.1)
 
 include_directories(include)
 include_directories(${XCB_INCLUDE_DIR})
@@ -75,3 +76,6 @@ target_link_libraries(${PROJECT_NAME} ${Libs})
 
 install(TARGETS ${PROJECT_NAME}
         DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(FILES ${man_page}
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1
+        COMPONENT doc)
