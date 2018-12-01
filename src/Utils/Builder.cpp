@@ -813,15 +813,20 @@ namespace Utils
             xcb_ewmh_set_wm_state(&ewmh, panel->winId(), 2, states);
             xcb_ewmh_set_wm_window_type(&ewmh, panel->winId(), 1, type);
 
-            // Get total width and height of desktop
-            uint32_t dw, dh;
-            xcb_ewmh_get_desktop_geometry_reply(&ewmh, xcb_ewmh_get_desktop_geometry(&ewmh, 0), &dw, &dh, nullptr);
+            // Get total height of desktop
+            int desktopHeight = 0;
+            for(auto s:QGuiApplication::screens())
+            {
+                int sum = s->geometry().y() + s->geometry().height();
+                if(desktopHeight < sum)
+                    desktopHeight = sum;
+            }
 
             xcb_ewmh_wm_strut_partial_t strut;
             memset(&strut, 0, sizeof(xcb_ewmh_wm_strut_partial_t));
             if(bottom)
             {
-                int bottom = panel->height() + dh - (screen.height() + screen.y());
+                int bottom = panel->height() + desktopHeight - (screen.height() + screen.y());
                 xcb_ewmh_set_wm_strut(&ewmh, panel->winId(), 0, 0, 0, bottom);
                 strut.bottom = bottom;
                 strut.bottom_start_x = screen.x();
